@@ -1,5 +1,8 @@
 import { InvokeAgentCommand, BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { Ollama } from 'ollama'
+
+const ollama = new Ollama()
 
 // AWS Configurations
 const s3Client = new S3Client({
@@ -42,16 +45,54 @@ export async function POST(req) {
         return new Response("Error fetching transcript", { status: 500 });
     }
 
-    const result = await invokeAgent(inputText, transcript, selectedCompany, persona,
-        foundationModel,
-        fmTemperature,
-        fmMaxTokens,
-        context);
+    // const result = await invokeAgent(inputText, transcript, selectedCompany, persona,
+    //     foundationModel,
+    //     fmTemperature,
+    //     fmMaxTokens,
+    //     context);
 
-    return new Response(result, {
+
+
+    // return new Response(result, {
+    //     headers: {
+    //         "Content-Type": "text/plain; charset=utf-8",
+    //         "Cache-Control": "no-cache",
+    //     },
+    // });
+
+
+    const encoder = new TextEncoder();
+    const readableStream = new ReadableStream({
+        async start(controller) {
+            try {
+                console.log("sending request.....")
+                const stream = await ollama.chat({
+                    model: 'llama3:8b', // Or llama2, llama3:8b, etc.
+                    messages: [{ role: 'user', content: `Answer the prompt based on provided transcript.\n\n\nTranscript:${transcript}\n\n\nPrompt:${inputText}.\n\n\nPlease provide your response with proper markdown.` }],
+                    stream: true,
+                    options: {
+                        num_ctx: 8192, // Set context length to 8192 tokens
+                    }
+                });
+                console.log("streaming response .....")
+
+                for await (const part of stream) {
+                    const chunk = encoder.encode(part.message.content);
+                    controller.enqueue(chunk);
+                }
+
+                controller.close();
+            } catch (error) {
+                console.error('Error:', error);
+                controller.error(error);
+            }
+        },
+    });
+
+    return new Response(readableStream, {
         headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "no-cache",
+            'Content-Type': 'text/plain',
+            'Cache-Control': 'no-cache',
         },
     });
 }

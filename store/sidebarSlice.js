@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { companies, quarters, years } from "../public/data";
 
 const initialState = {
   selectedTab: "Business Insights",
@@ -7,7 +8,12 @@ const initialState = {
   foundationModel: "anthropic.claude-3-5-sonnet-20240620-v1:0",
   fmTemperature: 1,
   fmMaxTokens: 2000,  
-  context: ""
+  context: "",
+  selectedCompany: companies[0],
+
+  selectedYear: years[0],
+  selectedQuarter: quarters[0],
+  selectedCategory: "Common",
   // Add other sidebar settings here
 };
 
@@ -37,7 +43,19 @@ const sidebarSlice = createSlice({
     },
     setContext(state, action) {
       state.context = action.payload;
-    }
+    },
+    setCompany(state, action) {
+      state.selectedCompany = action.payload;
+    },
+    setYear(state, action) {
+      state.selectedYear = action.payload;
+    },
+    setQuarter(state, action) {
+      state.selectedQuarter = action.payload;
+    },
+    setCategory(state, action) {
+      state.selectedCategory = action.payload;
+    },
     // Add other reducer actions for settings
   },
 });
@@ -51,6 +69,14 @@ export const {
   setFmTemperature,
   setFmMaxTokens,
   setContext,
+  selectedCompany,
+  selectedYear,
+  selectedQuarter,
+  selectedCategory,
+  setCompany,
+  setYear,
+  setQuarter,
+  setCategory,
   ...otherActions
 } = sidebarSlice.actions;
 

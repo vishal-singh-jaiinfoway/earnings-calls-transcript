@@ -1,5 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand, InvokeModelWithResponseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
-
+import Ollama from 'ollama';
 const { S3 } = require("aws-sdk");
 
 // AWS Configurations
@@ -120,6 +120,8 @@ const getAnswerForPrompt = async function* (source, prompt, chats, context, pers
                 }
             }
         }
+
+
     } catch (error) {
         console.error("Unexpected error:", error);
         yield "❌ **Error:** Unable to process your request at the moment. Please try again later.";

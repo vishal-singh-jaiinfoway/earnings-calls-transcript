@@ -1,6 +1,9 @@
 import { BedrockRuntimeClient, InvokeModelCommand, InvokeModelWithResponseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
 
 const { S3 } = require("aws-sdk");
+import { Ollama } from 'ollama'
+
+const ollama = new Ollama()
 
 // AWS Configurations
 const s3Client = new S3({
@@ -128,40 +131,59 @@ const getAnswerForPrompt = async function* (source, prompt, chats, context, pers
             yield "⚠️ **Note:** No reference data available. Providing a general response:";
         }
 
-        const modelCommand = new InvokeModelWithResponseStreamCommand({
-            modelId: "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            contentType: "application/json",
-            accept: "application/json",
-            body: JSON.stringify({
-                anthropic_version: "bedrock-2023-05-31",
-                messages: [
+        const chunkSize = 35000; // Keep it under the token limit
+        const overlap = 500; // Keep some overlap for context
 
-                    {
-                        role: "user",
-                        content: `You are provided transcript(s) of earnings-calls.Answer the prompt based on the provided context.\n\n\nContext:${source}\n\n\nPrompt:${prompt}\n\n\n.Generate your response for someone who is a ${persona},
-                        and with proper markdown formatting.Consider this additional context as well when generating response.\n
-                        Additional Context:${context}.Do not consider the additional context if it's not meaningful to the current prompt and Context.\n\nNever ever disclose or mention your source of information based on which you are answering the prompt,and that you are providing your response with markdown formatting.If question is unrelated to the provided context,then do not answer the prompt.`
-                    }
-                ],
-                max_tokens: fmMaxTokens,
-                temperature: fmTemperature,
-                top_p: 0.999,
-                top_k: 250,
-                stop_sequences: ["Human:", "Assistant:"]
-            })
-        });
+        let start = 0;
+        let previousResponse = "";
+        let combinedResponse = "";
 
-        const response = await bedrockClient.send(modelCommand);
-        for await (const event of response.body) {
-            if (event.chunk?.bytes) {
-                const chunkData = new TextDecoder("utf-8").decode(event.chunk.bytes);
-                const parsedData = JSON.parse(chunkData);
+        while (start < source.length) {
+            console.log("start", start)
+            console.log("source.length", source.length)
+            const end = Math.min(start + chunkSize, source.length);
+            const chunk = source.slice(start, end);
 
-                if (parsedData?.delta?.text) {
-                    yield parsedData.delta.text;
+            console.log("chunk", chunk)
+
+            // Include previous response for context
+            const input = previousResponse
+                ? `Previous context:\n${previousResponse}\n\nNew chunk:\n${chunk}\n\nPrompt:\n${prompt}`
+                : `Transcript:\n${chunk}\n\nPrompt:\n${prompt}.\n\n\nPlease provide your response with proper markdown.`;
+
+            console.log("Sending chunk to model...");
+
+            // Process chunk
+            const stream = await ollama.chat({
+                model: 'llama3:8b',
+                messages: [{ role: 'user', content: input }],
+                stream: true,
+                options: {
+                    num_ctx: 8192,
                 }
+            });
+
+            let response = "";
+            for await (const part of stream) {
+                response += part.message.content;
             }
+
+            // Keep a portion of the last response as context for the next chunk
+            previousResponse = response.slice(-overlap);
+
+            // Append to final response
+            combinedResponse += response;
+
+            start = end;
         }
+
+        // ✅ Stream the final combined response
+        for (const chunk of combinedResponse.match(/.{1,500}/g) || []) {
+            yield chunk;
+        }
+
+
+
     } catch (error) {
         console.error("Unexpected error:", error);
         yield "❌ **Error:** Unable to process your request at the moment. Please try again later.";
@@ -184,16 +206,28 @@ const generateResponse = async (prompt, rawPrompt, chats, context, persona, foun
         if (optimizedPrompt.fetch_transcripts) {
             const s3urls = queryParamsArray.map(generateS3Uri);
         const jsonFiles = await Promise.all(s3urls.map(fetchJsonFromS3));
-        const transformedData = jsonFiles.map(item => ({
-            id: item.id,
-            company_name: item.company_name,
-            event: item.event,
-            year: item.year,
-            transcript: item.transcript.map(t => t.text).join(" ") // Join all transcript texts
-        }));
+            const transformedData = jsonFiles.map(item => ({
+                id: item.id,
+                company_name: item.company_name,
+                event: item.event,
+                year: item.year,
+                transcript: item.transcript.map(t => t.text).join(" ") // Join all transcript texts
+            }));
+
+            // let fullText = "";
+
+            // jsonFiles.map(item => {
+            //     fullText += item.transcript.map(t => t.text).join(" ") // Join all transcript texts
+            // })
+
+
+
             return getAnswerForPrompt(JSON.stringify(transformedData), optimizedPrompt.prompt, chats, context, persona, foundationModel,
             fmTemperature,
-            fmMaxTokens,);
+                fmMaxTokens);
+
+
+
         } else {
             return getAnswerForPrompt(JSON.stringify(chats), optimizedPrompt.prompt, chats, context, persona, foundationModel,
                 fmTemperature,
@@ -286,5 +320,10 @@ export async function POST(req) {
         console.error("POST Error:", error);
         return new Response("Error occurred", { status: 500 });
     }
+}
+
+
+async function* processLargeInput(source, prompt) {
+
 }
 

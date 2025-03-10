@@ -14,6 +14,8 @@ import FinancialMetrics from "@/components/ui/financial-metrics";
 import MarketMetrics from "@/components/ui/market-metrics";
 import ChatBox from "@/components/ui/chatbox";
 import FilterOptions from "@/components/ui/filter-options";
+import { X } from "lucide-react";
+import CustomHeader from "@/components/ui/header";
 
 export default function SentimentAnalysis() {
     const [chats, setChats] = useState<any>([]);
@@ -61,7 +63,7 @@ export default function SentimentAnalysis() {
                 const { done, value } = await reader.read();
                 if (done) break;
                 resultText += decoder.decode(value, { stream: true });
-                console.log("resultText",resultText)
+                console.log("resultText", resultText)
                 setChats([...chats, { role: "assistant", content: DOMPurify.sanitize(resultText) }]);
             }
             setLoading(false);
@@ -99,45 +101,37 @@ export default function SentimentAnalysis() {
     const handleCompanyChange = (value: any) => {
         const selectedTicker = value;
         const selectedCompanyObj = companies.find(
-          (company) => company.ticker === selectedTicker,
+            (company) => company.ticker === selectedTicker,
         );
         setSelectedCompany(selectedCompanyObj); // Now setting the full object
-      };
-    
-    
-    
-      const handleYearChange = (value: any) => {
+    };
+
+
+
+    const handleYearChange = (value: any) => {
         setSelectedYear(value);
-      };
-    
-      const handleQuarterChange = (value: any) => {
+    };
+
+    const handleQuarterChange = (value: any) => {
         setSelectedQuarter(value);
-      };
-    
-      const handleInputChangeWithCompany = (event: { target: { value: SetStateAction<string>; }; }) => {
+    };
+
+    const handleInputChangeWithCompany = (event: { target: { value: SetStateAction<string>; }; }) => {
         console.log("handleInputChangeWithCompany", event.target.value)
-    
+
         setInputValue(event.target.value);
         setInputText(
-          `${event.target.value} ${selectedCompany.name ? "for " + selectedCompany.name : ""
-          } ${selectedQuarter ? "for the " + selectedQuarter + " quarter" : ""} ${selectedYear ? "of " + selectedYear : ""
-          }`,
+            `${event.target.value} ${selectedCompany.name ? "for " + selectedCompany.name : ""
+            } ${selectedQuarter ? "for the " + selectedQuarter + " quarter" : ""} ${selectedYear ? "of " + selectedYear : ""
+            }`,
         );
-      };
+    };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50 px-6 py-8 space-y-6">
+        <div className="h-screen flex flex-col bg-gray-50 px-6 py-0 space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center bg-white p-5 shadow-md rounded-xl border">
-                <div className="flex items-center space-x-2 text-blue-700">
-                    <ArrowUpRight size={22} />
-                    <span className="text-lg font-semibold">See Transcript</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">
-                    {selectedCompany.ticker} {selectedYear}-Q{selectedQuarter} Earnings Call
-                </span>
-            </div>
 
+            <CustomHeader></CustomHeader>
             {/* Filter Options */}
             <FilterOptions
                 selectedCompany={selectedCompany}
@@ -149,13 +143,13 @@ export default function SentimentAnalysis() {
             />
 
             {/* Financial Metrics & Market Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
                 <FinancialMetrics />
                 <MarketMetrics />
             </div>
 
             {/* Sentiment Analysis Card */}
-            <Card className="bg-white shadow-lg rounded-xl border">
+            <Card className="bg-gray-100 shadow-lg rounded-xl border">
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Sentiment Analysis</CardTitle>
                 </CardHeader>
@@ -177,35 +171,21 @@ export default function SentimentAnalysis() {
                         </div>
                     }
                 </CardContent>
-                {/* {isChatOpen && <ChatBox chats={chats} isLoading={isLoading} messagesEndRef={messagesEndRef}/>} */}
 
             </Card>
- {/* Chat Box */}
+            <ChatBox isOpen={isChatOpen} toggleChat={() => setIsChatOpen(!isChatOpen)} chats={chats} isLoading={isLoading} messagesEndRef={messagesEndRef}></ChatBox>
 
-           
-            {/* Chat Input */}
-            <div className="flex items-center gap-2 p-4 bg-white shadow-md rounded-xl border">
-                <Input
-                    value={inputValue}
-                    onChange={handleInputChangeWithCompany}
-                    placeholder="Ask a question..."
-                    className="flex-grow border-none focus:ring-0 text-gray-800"
-                />
-                <Button
-                    onClick={getAgentResponse}
-                    className="bg-blue-800 text-white hover:bg-blue-700 transition duration-200 rounded-lg px-6 py-2"
-                >
-                    Ask
-                </Button>
-            </div>
 
-             {/* Floating Chat Icon */}
-             <button
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-300 to-blue-800 text-white p-4 rounded-full shadow-lg hover:bg-gradient-to-r from-blue-800 to-blue-300 transition duration-300"
-            >
-                <MessageCircle size={24} />
-            </button>
+
+
         </div>
     );
 }
+
+
+
+
+
+
+
+

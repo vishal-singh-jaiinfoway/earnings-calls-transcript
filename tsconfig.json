@@ -28,7 +28,9 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/app/components/charts/index.js",
-    "src/app/business-insights/page.jsx"
+    "src/app/business-insights/page.jsx",
+    "src/app/components/ui/market-metrics.tsx",
+    "src/app/aggregate-insights/page.jsx"
   ],
   "exclude": ["node_modules"]
 }

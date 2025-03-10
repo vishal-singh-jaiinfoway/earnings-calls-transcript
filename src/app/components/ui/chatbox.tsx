@@ -1,45 +1,89 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
+"use client";
 
-function ChatBox({ chats, isLoading, messagesEndRef }: any) {
+import React, { useState } from "react";
+import { MessageCircle, X } from "lucide-react";
+import { Input } from "./input";
+import { Button } from "./button";
+
+function ChatBox({
+  isOpen,
+  toggleChat,
+  chats,
+  isLoading,
+  messagesEndRef
+}: {
+  isOpen: boolean;
+  toggleChat: () => void;
+  chats: any;
+  isLoading: boolean;
+  messagesEndRef: any
+}) {
+  const [messages, setMessages] = useState<{ text: string; sender: "user" | "ai" }[]>([]);
+  const [input, setInput] = useState("");
+
+  async function sendMessage() {
+    if (!input.trim()) return;
+    setMessages((prev) => [...prev, { text: input, sender: "user" }]);
+    setInput("");
+
+    // Simulated AI response
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { text: "This is an AI response!", sender: "ai" }]);
+    }, 1000);
+  }
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={toggleChat}
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+      >
+        <MessageCircle size={28} />
+      </button>
+    );
+  }
+
   return (
-    <Card className="flex-grow min-h-0 bg-white rounded-lg shadow-md border border-gray-200">
-      <CardContent className="p-4 space-y-4 overflow-y-auto max-h-[500px]">
-        {chats.map((m: any, index: number) => (
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col w-[350px] sm:w-[400px] md:w-[450px] bg-white shadow-xl rounded-2xl border border-gray-200">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-2xl">
+        <span className="text-lg font-semibold">Chat with AI</span>
+        <button onClick={toggleChat} className="text-white hover:text-gray-300">
+          <X size={24} />
+        </button>
+      </div>
+
+      {/* Messages Area */}
+      <div className="h-[60vh] overflow-y-auto p-4 space-y-3 bg-gray-50">
+        {messages.map((msg, i) => (
           <div
-            key={index}
-            className={cn(
-              "p-3 rounded-lg text-sm w-fit max-w-[75%]",
-              m.role === "user"
-                ? "ml-auto bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-900"
-            )}
+            key={i}
+            className={`p-3 rounded-xl text-sm max-w-[75%] break-words ${msg.sender === "user"
+              ? "bg-blue-500 text-white ml-auto shadow-md"
+              : "bg-gray-200 text-gray-800"
+              }`}
           >
-            <span className={cn("font-semibold", m.role === "user" ? "text-white" : "text-blue-600")}>
-              {m.role === "user" ? "You" : "AI"}
-            </span>
-            <div className="prose mt-1">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                {m.content}
-              </ReactMarkdown>
-            </div>
+            {msg.text}
           </div>
         ))}
+      </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center space-x-1">
-            <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce"></span>
-            <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce delay-150"></span>
-            <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce delay-300"></span>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </CardContent>
-    </Card>
+      {/* Input Area */}
+      <div className="flex items-center gap-2 p-4 border-t bg-white rounded-b-2xl">
+        <Input
+          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Ask a question..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <Button
+          onClick={sendMessage}
+          className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-4 py-2 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-800 transition duration-300"
+        >
+          Send
+        </Button>
+      </div>
+    </div>
   );
 }
 

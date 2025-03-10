@@ -30,13 +30,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import FilterOptions from "@/components/ui/filter-options";
 
-export default function BusinessInsights({
-  isChatOpen,
-  setIsChatOpen,
-  chats,
-  setChats,
-}) {
+export default function BusinessInsights({}) {
+  const [chats, setChats] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const foundationModel = useSelector((state) => state.sidebar.foundationModel);
   const fmTemperature = useSelector((state) => state.sidebar.fmTemperature);
   const fmMaxTokens = useSelector((state) => state.sidebar.fmMaxTokens);
@@ -131,6 +129,7 @@ export default function BusinessInsights({
           break;
         }
         resultText += decoder.decode(value, { stream: true });
+        console.log("resultText", resultText);
         const sanitizedMarkdown = DOMPurify.sanitize(resultText);
         setChats((prev) => {
           let temp = [...prev];
@@ -146,62 +145,24 @@ export default function BusinessInsights({
     }
   };
 
-  const getSentimentAnalysis = async () => {
-    setIsSentimentsLoading(true);
-    try {
-      const res = await fetch(apiUrlSentiments, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checked,
-          selectedCompany,
-          selectedYear,
-          selectedQuarter,
-        }),
-      });
-
-      const reader = res.body?.getReader();
-      if (!reader) return;
-
-      const decoder = new TextDecoder();
-      let resultText = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          setIsSentimentsLoading(false);
-          break;
-        }
-        resultText += decoder.decode(value, { stream: true });
-
-        const sanitizedMarkdown = DOMPurify.sanitize(resultText);
-        setContent(sanitizedMarkdown);
-      }
-    } catch (error) {
-      console.log(error);
-      setContent(
-        `<p style="color:red;">Error: ${"Sorry,something went wrong"}</p>`,
-      );
-    }
-  };
-
-  const handleCompanyChange = (event) => {
-    const selectedTicker = event.target.value;
+  const handleCompanyChange = (value) => {
+    const selectedTicker = value;
     const selectedCompanyObj = companies.find(
       (company) => company.ticker === selectedTicker,
     );
     setSelectedCompany(selectedCompanyObj); // Now setting the full object
   };
 
-  const handleCategoryChange = (event) => {
-    setSelectedCategory(event.target.value);
+  const handleCategoryChange = (value) => {
+    setSelectedCategory(value);
   };
 
-  const handleYearChange = (event) => {
-    setSelectedYear(event.target.value);
+  const handleYearChange = (value) => {
+    setSelectedYear(value);
   };
 
-  const handleQuarterChange = (event) => {
-    setSelectedQuarter(event.target.value);
+  const handleQuarterChange = (value) => {
+    setSelectedQuarter(value);
   };
 
   const handleInputChangeWithCompany = (event) => {
@@ -245,15 +206,6 @@ export default function BusinessInsights({
         <title>Business Insights</title>
       </Head>
 
-      {/* Header */}
-      {/* <header className="bg-blue-800  text-white py-5 px-6 shadow-lg">
-        <div className="container mx-auto text-center">
-          <h1 className="text-3xl font-extrabold tracking-wide">
-            Business Insights
-          </h1>
-        </div>
-      </header> */}
-
       {/* Main Content */}
       <main className="container mx-auto flex-grow overflow-y-auto shadow-lg">
         <div className="bg-white p-6 w-full rounded-lg shadow-lg flex flex-col space-y-4">
@@ -269,20 +221,16 @@ export default function BusinessInsights({
               handleYearChange={handleYearChange}
               handleCategoryChange={handleCategoryChange}
             ></FilterOptions>
-             <SuggestedQuestions
-            suggestedQuestions={suggestedQuestions}
-            selectedCategory={selectedCategory}
-            handleButtonClick={handleButtonClick}
-          ></SuggestedQuestions>
+            <SuggestedQuestions
+              suggestedQuestions={suggestedQuestions}
+              selectedCategory={selectedCategory}
+              handleButtonClick={handleButtonClick}
+            ></SuggestedQuestions>
           </div>
-
-         
-        
-         
         </div>
 
-        <div className="flex flex-col">
-        <div className="flex-grow h-[40vh] min-h-0 overflow-y-auto bg-gray-100 rounded-lg p-4 space-y-4 shadow-lg">
+        <div className="flex flex-col p-4">
+          <div className="flex-grow h-[40vh] min-h-0 overflow-y-auto bg-gray-100 rounded-lg p-4 space-y-4 shadow-lg">
             {chats?.map((m, index) => (
               <div
                 key={index}
@@ -312,8 +260,13 @@ export default function BusinessInsights({
 
             {/* Loading Indicator */}
             {isLoading && (
-              <div className="loading-container">
-                <div className="spinner"></div>
+              // <div className="loading-container">
+              //   <div className="spinner"></div>
+              //   <p className="loading-text">Generating response...</p>
+              // </div>
+
+              <div className="flex flex-col justify-center items-center py-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
                 <p className="loading-text">Generating response...</p>
               </div>
             )}
@@ -324,6 +277,7 @@ export default function BusinessInsights({
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              console.log("inputValue", inputValue);
               getAgentResponse();
             }}
             className="flex"
@@ -356,8 +310,6 @@ export default function BusinessInsights({
   );
 }
 
-
-
 const ScrollToTop = ({ scrollToTop }) => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -387,8 +339,6 @@ const ScrollToTop = ({ scrollToTop }) => {
   );
 };
 
- 
-
 const SuggestedQuestions = ({
   suggestedQuestions,
   selectedCategory,
@@ -400,7 +350,6 @@ const SuggestedQuestions = ({
   const questions = suggestedQuestions[selectedCategory]["Common Questions"];
 
   useEffect(() => {
-    console.log("questions",questions)
     if (isOpen) {
       setVisibleQuestions(0); // Reset questions when reopening
 
@@ -446,97 +395,9 @@ const SuggestedQuestions = ({
                 {question}
               </button>
             </div>
-          
-          
           ))}
         </div>
       )}
     </div>
   );
 };
-
-function FilterOptions({
-  selectedCompany,
-  selectedYear,
-  selectedQuarter,
-  selectedCategory,
-  handleCompanyChange,
-  handleYearChange,
-  handleQuarterChange,
-  handleCategoryChange,
-}) {
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-      {/* Company Select */}
-      <div>
-        <Label className="text-md font-bold text-gray-700">Company</Label>
-        <Select
-          onValueChange={handleCompanyChange}
-          value={selectedCompany.ticker}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a company" />
-          </SelectTrigger>
-          <SelectContent>
-            {companies?.map((company, index) => (
-              <SelectItem key={index} value={company.ticker}>
-                {company.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Year Select */}
-      <div>
-        <Label className="text-md font-bold text-gray-700">Year</Label>
-        <Select onValueChange={handleYearChange} value={selectedYear}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a year" />
-          </SelectTrigger>
-          <SelectContent>
-            {years?.map((year, index) => (
-              <SelectItem key={index} value={year}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Quarter Select */}
-      <div>
-        <Label className="text-md font-bold text-gray-700">Quarter</Label>
-        <Select onValueChange={handleQuarterChange} value={selectedQuarter}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a quarter" />
-          </SelectTrigger>
-          <SelectContent>
-            {quarters?.map((quarter, index) => (
-              <SelectItem key={index} value={quarter}>
-                {quarter}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Quarter Category */}
-      <div>
-        <Label className="text-md font-bold text-gray-700">Category</Label>
-        <Select onValueChange={handleCategoryChange} value={selectedCategory}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(suggestedQuestions)?.map((category, index) => (
-              <SelectItem key={index} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-} 
