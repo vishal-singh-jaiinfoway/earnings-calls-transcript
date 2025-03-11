@@ -46,9 +46,9 @@ function ChatBox({
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col w-[350px] sm:w-[400px] md:w-[450px] bg-white shadow-xl rounded-2xl border border-gray-200">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-2xl">
-        <span className="text-lg font-semibold">Chat with AI</span>
-        <button onClick={toggleChat} className="text-white hover:text-gray-300">
+      <div className="flex justify-between items-center p-4 rounded-t-2xl">
+        {/* <span className="text-lg font-semibold">Chat with AI</span> */}
+        <button onClick={toggleChat} className="text-gray-800  hover:text-gray-900">
           <X size={24} />
         </button>
       </div>

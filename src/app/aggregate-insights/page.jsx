@@ -18,6 +18,7 @@ import { ArrowUp, ChevronDown, SendHorizonalIcon, X } from "lucide-react";
 import { Button } from "@mui/material";
 import { Menu, MenuButton, MenuItem } from "@headlessui/react";
 import { createPortal } from "react-dom";
+import DynamicChart from "@/components/charts/dynamicChart";
 
 const options = Object.entries(suggestedQuestions)?.map(([category, data]) => ({
   label: category,
@@ -30,25 +31,22 @@ const options = Object.entries(suggestedQuestions)?.map(([category, data]) => ({
   ),
 }));
 
-export default function AggregateDashboard({
- 
-}) {
-   const [chats, setChats] = useState([]);
-    const [isChatOpen, setIsChatOpen] = useState(false);
+export default function AggregateDashboard({}) {
+  const [chats, setChats] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const foundationModel = useSelector((state) => state.sidebar.foundationModel);
   const fmTemperature = useSelector((state) => state.sidebar.fmTemperature);
   const fmMaxTokens = useSelector((state) => state.sidebar.fmMaxTokens);
   const context = useSelector((state) => state.sidebar.context);
   const persona = useSelector((state) => state.sidebar.persona);
   const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/aggregate-insights-api`;
-  const [selectedCompanies, setSelectedCompanies] = useState([]);
+
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(
     Object.keys(suggestedQuestions)[0],
   );
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(years[0]);
-  const [selectedQuarter, setSelectedQuarter] = useState(quarters[0]);
+
   const [isLoading, setLoading] = useState(false);
 
   const startRef = useRef(null);
@@ -59,10 +57,30 @@ export default function AggregateDashboard({
 
   const [previousPrompts, setPreviousPrompts] = useState([]);
 
-  const [filters, setFilters] = useState([
-    ...selectedCompanies,
-    selectedYear,
-    selectedQuarter,
+  const selectedCompanies = useSelector(
+    (state) => state.sidebar.selectedCompanies,
+  );
+  const selectedYear = useSelector((state) => state.sidebar.selectedYear);
+  const selectedQuarter = useSelector((state) => state.sidebar.selectedQuarter);
+
+  const [shouldRenderChart, setShouldRenderChart] = useState(false);
+  const [chartData, setChartData] = useState([
+    {
+      segment: "Lending",
+      revenue: 325,
+    },
+    {
+      segment: "Financial Services",
+      revenue: 151,
+    },
+    {
+      segment: "Technology Platform",
+      revenue: 94,
+    },
+    {
+      segment: "Other",
+      revenue: 11,
+    },
   ]);
 
   useEffect(() => {
@@ -86,6 +104,35 @@ export default function AggregateDashboard({
     selectedQuarter,
     selectedYear,
   ]);
+
+  function extractChartData(text) {
+    const rows = text
+      .split("\n")
+      .map((row) => row.trim())
+      .filter((row) => row.startsWith("|") && row.endsWith("|")); // Filter valid rows
+
+    if (rows.length < 3) return []; // Ensure we have enough rows (header + data)
+
+    const data = [];
+
+    for (let i = 1; i < rows.length - 1; i++) {
+      const row = rows[i]
+        .split("|") // Split by pipe
+        .map((cell) => cell.trim()) // Trim spaces
+        .filter((cell) => cell); // Remove empty strings
+
+      if (row.length === 2) {
+        const segment = row[0];
+        const revenue = parseFloat(row[1].replace("$", "").replace(",", ""));
+
+        if (!isNaN(revenue)) {
+          data.push({ segment, revenue });
+        }
+      }
+    }
+
+    return data;
+  }
 
   const getAgentResponse = async () => {
     try {
@@ -132,6 +179,8 @@ export default function AggregateDashboard({
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
+          // console.log("extractChartData", extractChartData(resultText));
+          // setChartData(extractChartData(resultText));
           setLoading(false);
           setPreviousPrompts((prev) => {
             let temp = [...prev];
@@ -193,103 +242,46 @@ export default function AggregateDashboard({
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="flex flex-col h-full">
       <Head>
         <title>Aggregate Business Insights</title>
       </Head>
-      {/* <header className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-5 px-6 shadow-lg">
-        <div className="container mx-auto text-center">
-          <h1 className="text-3xl font-extrabold tracking-wide">
-            Aggregate Business Insights
-          </h1>
-        </div>
-      </header> */}
-      <main className="container mx-auto flex-grow p-6">
-        <div className="bg-white p-6 w-full h-full rounded-lg shadow-xl flex flex-col space-y-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+
+      <main className="container mx-auto p-8">
+        <div className="bg-white p-8 w-full h-full  shadow-xl flex flex-col space-y-6 border-0 border-gray-200">
+          {/* Top Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label className="block text-md font-bold text-gray-700">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Category
               </label>
               <SelectWithSubmenu
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-400"
+                className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 p-3"
                 handleCategoryChange={handleCategoryChange}
                 handleButtonClick={handleButtonClick}
-              ></SelectWithSubmenu>
-            </div>
-
-            <div>
-              <label className="block text-md font-bold text-gray-700">
-                Company
-              </label>
-              <MultiSelect
-                selectedCompanies={selectedCompanies}
-                setSelectedCompanies={setSelectedCompanies}
               />
-            </div>
-
-            {selectedCompanies.length > 0 && (
-              <div>
-                <label className="block text-md font-bold text-gray-700">
-                  Selected Companies
-                </label>
-                <div className="p-2 border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedCompanies.join(", ")}
-                </div>
-              </div>
-            )}
-            <div>
-              <label className="block text-md font-bold text-gray-700">
-                Year
-              </label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-400"
-                value={selectedYear}
-                onChange={handleYearChange}
-              >
-                {years?.map((year, index) => (
-                  <option key={index} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-md font-bold text-gray-700">
-                Quarter
-              </label>
-              <select
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-400"
-                value={selectedQuarter}
-                onChange={handleQuarterChange}
-              >
-                {quarters?.map((quarter, index) => (
-                  <option key={index} value={quarter}>
-                    {quarter}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 
-          <div className="flex-grow h-[240px] min-h-0 overflow-y-auto bg-gray-100 rounded-lg p-4 space-y-4">
+          {/* Chat Window */}
+          <div className="h-[50vh] overflow-y-auto bg-gray-100 shadow-lg p-6 space-y-4 border-0 border-gray-300">
             {chats?.map((m, index) => (
               <div
                 key={index}
-                className={`p-2 rounded-lg ${
+                className={`p-4 rounded-xl text-md ${
                   m.role === "user"
-                    ? "bg-blue-100 text-blue-900"
-                    : "bg-gray-200 text-gray-900"
+                    ? "bg-blue-400 text-white"
+                    : "bg-gray-200 text-gray-800"
                 }`}
               >
                 <span
-                  className={`font-semibold ${
-                    m.role === "user" ? "text-blue-600" : "text-green-600"
+                  className={`font-medium ${
+                    m.role === "user" ? "text-blue-900" : "text-green-900"
                   }`}
                 >
                   {m.role === "user" ? "User: " : "AI: "}
                 </span>
-                <div className="prose ml-6 custom-markdown">
+                <div className="prose ml-4">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
@@ -297,95 +289,69 @@ export default function AggregateDashboard({
                     {m.content}
                   </ReactMarkdown>
                 </div>
+                {/* <div>
+                  {m.role === "assistant" && chartData.length > 0 && (
+                    <DynamicChart data={chartData} />
+                  )}
+                </div> */}
               </div>
             ))}
-            {/* <ScrollToTop scrollToTop={scrollToTop} /> */}
-           
-             {/* Loading Indicator */}
-             {isLoading && (
-              // <div className="loading-container">
-              //   <div className="spinner"></div>
-              //   <p className="loading-text">Generating response...</p>
-              // </div>
 
-              <div className="flex flex-col justify-center items-center py-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-                <p className="loading-text">Generating response...</p>
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex flex-col justify-center items-center py-6">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500" />
+                <p className="text-sm text-gray-500 mt-2">
+                  Generating response...
+                </p>
               </div>
             )}
 
-
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Input Form */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (!selectedCompanies.length) {
-                return alert("Please select atleast one company");
+                return alert("Please select at least one company");
               }
-              if (!inputValue.trim().length) {
+              if (!inputValue.trim()) {
                 return alert("Please provide some input");
               }
               getAgentResponse();
             }}
-            className="flex"
+            className="flex gap-2"
           >
             <input
-              className="flex-grow p-2 border border-gray-300 rounded-l"
+              className="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
               value={inputValue}
               placeholder="Ask your question..."
               onChange={handleInputChangeWithCompany}
             />
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600"
+              className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-3 rounded-lg shadow-md hover:scale-105 transition-transform duration-200"
             >
               Send
             </button>
           </form>
         </div>
+
+        {/* Chat Popup */}
         {isChatOpen && (
           <FetchUploadPopUp
             isOpen={isChatOpen}
             setIsOpen={setIsChatOpen}
             chats={fetchUploadChats}
             setChats={setFetchUploadChats}
-          ></FetchUploadPopUp>
+          />
         )}
       </main>
     </div>
   );
 }
-
-const ScrollToTop = ({ scrollToTop }) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  //   useEffect(() => {
-  //     const toggleVisibility = () => {
-  //       const scrollY = Math.floor(window.scrollY); // Ensures we get whole numbers
-  //       console.log("toggleVisibility", scrollY);
-  //       setIsVisible(scrollY >= 3.75);
-  //     };
-
-  //     window.addEventListener("scroll", toggleVisibility);
-  //     return () => window.removeEventListener("scroll", toggleVisibility);
-  //   }, []);
-
-  const comeIntoView = () => {
-    scrollToTop();
-  };
-
-  return (
-    <button
-      onClick={comeIntoView}
-      className={`fixed bottom-2 right-0 p-3 bg-blue-600 text-white rounded-full shadow-lg transition-opacity duration-300 ${
-        isVisible ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <ArrowUp size={20}></ArrowUp>
-    </button>
-  );
-};
 
 function FetchUploadPopUp({ isOpen, setIsOpen, chats, setChats }) {
   const [inputText, setInput] = useState("");
@@ -553,74 +519,6 @@ function FetchUploadPopUp({ isOpen, setIsOpen, chats, setChats }) {
   );
 }
 
-function MultiSelect({ selectedCompanies, setSelectedCompanies }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const toggleDropdown = () => setIsOpen(!isOpen);
-
-  const handleSelect = (ticker) => {
-    setSelectedCompanies((prev) => {
-      if (prev.includes(ticker)) {
-        // Remove if already selected
-        return prev.filter((item) => item !== ticker);
-      }
-
-      if (prev.length >= 5) {
-        // Prevent adding more than 5
-        alert("You can select up to 5 companies");
-        return prev; // Keep the previous state
-      }
-
-      // Add new selection
-      return [...prev, ticker];
-    });
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-  return (
-    <div
-      className="relative inline-block w-[-webkit-fill-available]"
-      ref={dropdownRef}
-    >
-      <button
-        onClick={toggleDropdown}
-        className="border px-4 py-2 bg-white w-full text-left rounded border border-gray-300"
-      >
-        Select Companies
-      </button>
-
-      {isOpen && (
-        <div className="absolute border border-gray-300 bg-white mt-1 shadow-md w-full max-h-[300px] overflow-y-auto rounded">
-          {companies?.map((company) => (
-            <label
-              key={company.ticker}
-              className="border-b border-gray-300 flex items-center p-2 cursor-pointer hover:bg-gray-100"
-            >
-              <input
-                type="checkbox"
-                checked={selectedCompanies.includes(company.ticker)}
-                onChange={() => handleSelect(company.ticker)}
-                className="mr-2"
-              />
-              {company.name}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 const SelectWithSubmenu = ({
   className,
   handleCategoryChange,
@@ -640,7 +538,6 @@ const SelectWithSubmenu = ({
     setIsOpen(false);
   };
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -657,7 +554,6 @@ const SelectWithSubmenu = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle submenu open/close delay to prevent accidental closing
   const openSubmenuWithDelay = (value) => {
     clearTimeout(closeTimeout.current);
     setOpenSubmenu(value);
@@ -666,7 +562,7 @@ const SelectWithSubmenu = ({
   const closeSubmenuWithDelay = () => {
     closeTimeout.current = setTimeout(() => {
       setOpenSubmenu(null);
-    }, 100); // Small delay to allow mouse transition
+    }, 100);
   };
 
   return (
@@ -674,9 +570,9 @@ const SelectWithSubmenu = ({
       <Menu as="div" className="relative" open={isOpen} onChange={setIsOpen}>
         <MenuButton
           onClick={() => setIsOpen(!isOpen)}
-          className={`${className} px-2 py-2 rounded-md`}
+          className={`${className} px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800  text-white hover:bg-gradient-to-r from-blue-600 to-blue-800  transition duration-200 shadow-md`}
         >
-          <div className="flex flex-row items-center justify-between">
+          <div className="flex items-center justify-between">
             <span className="w-[12.5rem] truncate">
               {selected || "Select a question"}
             </span>
@@ -684,7 +580,7 @@ const SelectWithSubmenu = ({
           </div>
         </MenuButton>
         {isOpen && (
-          <div className="absolute z-10 mt-2 w-64 max-w-md rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+          <div className="absolute z-10 mt-2 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-200 overflow-hidden">
             <div className="max-h-[55vh] overflow-y-auto">
               {options?.map((option) => (
                 <div key={option.value} className="relative">
@@ -697,7 +593,7 @@ const SelectWithSubmenu = ({
                         }
                         onMouseEnter={() => openSubmenuWithDelay(option.value)}
                         onMouseLeave={closeSubmenuWithDelay}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 truncate"
+                        className="w-full text-left px-4 py-3 hover:bg-gray-100 font-medium text-gray-800 transition duration-150"
                         title={option.label}
                       >
                         {option.label}
@@ -708,7 +604,7 @@ const SelectWithSubmenu = ({
                         createPortal(
                           <div
                             ref={submenuRef}
-                            className="absolute z-50 bg-white border-2 border-gray-800 shadow-lg overflow-y-auto max-w-[60vw]"
+                            className="absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto max-w-[60vw]"
                             style={{
                               position: "fixed",
                               top:
@@ -733,7 +629,7 @@ const SelectWithSubmenu = ({
                                   handleCategoryChange(option.value);
                                   handleButtonClick(subOption.value);
                                 }}
-                                className="block w-full px-4 py-2 text-left overflow-x-auto whitespace-nowrap hover:bg-blue-500 hover:text-white"
+                                className="block w-full px-4 py-3 text-left text-gray-800 hover:bg-gradient-to-r from-blue-600 to-blue-800 hover:text-white transition duration-150"
                                 title={subOption.label}
                               >
                                 {subOption.label}
@@ -750,7 +646,7 @@ const SelectWithSubmenu = ({
                           onClick={() => handleSelect(option.value)}
                           className={`${
                             active ? "bg-gray-100" : ""
-                          } block w-full px-4 py-2 text-left truncate`}
+                          } block w-full px-4 py-3 text-left text-gray-800 hover:bg-gray-100 transition duration-150`}
                           title={option.label}
                         >
                           {option.label}
@@ -767,4 +663,5 @@ const SelectWithSubmenu = ({
     </div>
   );
 };
+
 

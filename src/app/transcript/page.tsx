@@ -8,7 +8,7 @@ export default function Transcript() {
     const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
     const [transcript, setTranscript] = useState<any>([]);
 
-    const selectedCompany = useSelector((state: any) => state.sidebar.selectedCompany);
+    const selectedCompanies = useSelector((state: any) => state.sidebar.selectedCompanies);
     const selectedYear = useSelector((state: any) => state.sidebar.selectedYear);
     const selectedQuarter = useSelector((state: any) => state.sidebar.selectedQuarter);
 
@@ -16,10 +16,10 @@ export default function Transcript() {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/transcript`;
 
     useEffect(() => {
-        if (selectedCompany && selectedQuarter && selectedYear) {
-            fetchTranscript(selectedCompany, selectedQuarter, selectedYear)
+        if (selectedCompanies?.length && selectedQuarter && selectedYear) {
+            fetchTranscript(selectedCompanies[0], selectedQuarter, selectedYear)
         }
-    }, [selectedCompany, selectedQuarter, selectedYear])
+    }, [selectedCompanies, selectedQuarter, selectedYear])
 
 
     async function fetchTranscript(selectedCompany: any, selectedQuarter: string, selectedYear: number) {
@@ -63,11 +63,11 @@ export default function Transcript() {
 
 
     return (
-        <div className="h-screen flex flex-col  px-6 py-0 space-y-6">
-            <Card className="bg-gray-200 shadow-lg rounded-xl border">
-                <CardHeader>
+        <div className="flex flex-col  px-6 py-6 space-y-6 w-[80vw] m-[auto]">
+            <Card className="">
+                {/* <CardHeader>
                     <CardTitle className="text-lg font-semibold">Transcript</CardTitle>
-                </CardHeader>
+                </CardHeader> */}
                 <CardContent className="py-4">
                     {isTranscriptLoading ? (
                         <div className="flex justify-center items-center py-4">

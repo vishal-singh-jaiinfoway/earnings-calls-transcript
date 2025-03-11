@@ -9,8 +9,7 @@ const initialState = {
   fmTemperature: 1,
   fmMaxTokens: 2000,  
   context: "",
-  selectedCompany: companies[0],
-
+  selectedCompanies: [],
   selectedYear: years[0],
   selectedQuarter: quarters[0],
   selectedCategory: "Common",
@@ -44,8 +43,8 @@ const sidebarSlice = createSlice({
     setContext(state, action) {
       state.context = action.payload;
     },
-    setCompany(state, action) {
-      state.selectedCompany = action.payload;
+    setCompanies(state, action) {
+      state.selectedCompanies = action.payload;
     },
     setYear(state, action) {
       state.selectedYear = action.payload;
@@ -69,11 +68,11 @@ export const {
   setFmTemperature,
   setFmMaxTokens,
   setContext,
-  selectedCompany,
+  selectedCompanies,
   selectedYear,
   selectedQuarter,
   selectedCategory,
-  setCompany,
+  setCompanies,
   setYear,
   setQuarter,
   setCategory,

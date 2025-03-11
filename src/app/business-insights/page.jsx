@@ -201,36 +201,28 @@ export default function BusinessInsights({}) {
   };
 
   return (
-    <div className="flex flex-col shadow-lg border border-gray-200 h-[80vh]">
+    <div className="flex flex-col shadow-lg border border-[green] p-4">
       <Head>
         <title>Business Insights</title>
       </Head>
 
       {/* Main Content */}
-      <main className="container mx-auto flex-grow overflow-y-auto shadow-lg">
-        <div className="bg-white p-6 w-full rounded-lg shadow-lg flex flex-col space-y-4">
-          {/* Filters */}
-          <div className="flex flex-col gap-2">
-            <FilterOptions
-              selectedCompany={selectedCompany}
-              selectedYear={selectedYear}
-              selectedQuarter={selectedQuarter}
-              selectedCategory={selectedCategory}
-              handleCompanyChange={handleCompanyChange}
-              handleQuarterChange={handleQuarterChange}
-              handleYearChange={handleYearChange}
-              handleCategoryChange={handleCategoryChange}
-            ></FilterOptions>
-            <SuggestedQuestions
-              suggestedQuestions={suggestedQuestions}
-              selectedCategory={selectedCategory}
-              handleButtonClick={handleButtonClick}
-            ></SuggestedQuestions>
+      <main className="container mx-auto flex flex-row overflow-y-auto shadow-lg border-0 border-[red] p-0 gap-4">
+        {/* Filters */}
+
+        <div className="h-[80vh] w-[25%] border-0 border-[maroon]">
+          <div className="bg-white p-6 w-full h-full rounded-lg shadow-lg flex flex-col space-y-4">
+            <div className="flex flex-col gap-2">
+              <SuggestedQuestions
+                suggestedQuestions={suggestedQuestions}
+                selectedCategory={selectedCategory}
+                handleButtonClick={handleButtonClick}
+              ></SuggestedQuestions>
+            </div>
           </div>
         </div>
-
-        <div className="flex flex-col p-4">
-          <div className="flex-grow h-[40vh] min-h-0 overflow-y-auto bg-gray-100 rounded-lg p-4 space-y-4 shadow-lg">
+        <div className="w-[75%] flex flex-col border-0 border-black h-[80vh] p-0 gap-4">
+          <div className="border-0 border-[blue] h-[80vh] overflow-y-auto rounded-lg p-4 space-y-4 shadow-lg">
             {chats?.map((m, index) => (
               <div
                 key={index}
@@ -366,7 +358,7 @@ const SuggestedQuestions = ({
     <div className="relative">
       {/* Toggle Dropdown */}
       <button
-        className="w-[250px] flex flex-row items-center justify-center bg-gradient-to-r from-blue-300 to-blue-800 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
+        className="w-[250px] flex flex-row items-center justify-center bg-gradient-to-r from-blue-800 to-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? "Hide Questions" : "Suggested Questions"}

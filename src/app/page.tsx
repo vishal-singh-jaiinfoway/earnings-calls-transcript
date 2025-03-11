@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Brain, Smile, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
+import ChatDemo from './components/ui/chatDemo';
 
 // Simulated Stock Market Data
 const stockData = [
@@ -107,30 +108,27 @@ export default function LandingPage() {
         <p className="mt-4 text-lg text-gray-400">
           Get AI-powered summaries, sentiment analysis, and key takeaways from the latest earnings calls of top companies.
         </p>
-        {/* <button className="bg-gradient-to-r from-blue-500 to-blue-800 mt-6 px-8 py-3 text-lg font-semibold text-white rounded-lg shadow-lg hover:scale-105 transition-all">
-          Get Started
-        </button> */}
-      </motion.div>
 
+      </motion.div>
       {/* Features Section */}
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl relative z-10">
         <FeatureCard
           title="AI-Powered Summaries"
           description="Quickly understand earnings calls with AI-generated summaries."
           icon={<Brain size={30} />}
-          gradient="from-blue-500 to-blue-700"
+          gradient="from-blue-600 to-blue-800"
         />
         <FeatureCard
           title="Sentiment Analysis"
           description="Analyze the tone and sentiment of key executives."
           icon={<Smile size={30} />}
-          gradient="from-blue-500 to-indigo-600"
+          gradient="from-blue-600 to-blue-800"
         />
         <FeatureCard
           title="Actionable Insights"
           description="Extract key takeaways to make informed investment decisions."
           icon={<TrendingUp size={30} />}
-          gradient="from-blue-600 to-cyan-500"
+          gradient="from-blue-600 to-blue-800"
         />
       </div>
     </div>

@@ -1,12 +1,14 @@
 'use client';
 import { Inter, Geist, Geist_Mono, Urbanist, Lora } from "next/font/google";
 import { useEffect, useState } from 'react';
-import { CssBaseline, IconButton, Box, AppBar, Toolbar, Typography } from '@mui/material';
+import { CssBaseline, IconButton, Box, AppBar, Toolbar, Tabs, Tab, Menu, MenuItem } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import './globals.css';
-import CustomSidebar from './components/sidebar';
+import Sidebar from './components/sidebar';
 import { Provider, useSelector } from "react-redux";
 import { store } from "../../store/store";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const urbanist = Urbanist({ subsets: ['latin'], weight: ["400"] });
@@ -39,67 +41,50 @@ const tabs = {
   'earnings-trend': 'Earnings Call Trends'
 };
 
-const getTabName = (tab: string) => {
-  return tabs[tab as keyof typeof tabs] || '';
-};
+const getTabName = (tab: string) => tabs[tab as keyof typeof tabs] || '';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [tab, setCurrentTab] = useState("Home");
-
-  const selectedTab = useSelector((state: any) => state.sidebar.selectedTab);
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    setCurrentTab(getTabName(selectedTab));
-  }, [selectedTab]);
+    if (pathname === "/aggregate-insights") {
+      setCollapsed(false);
+    }
+  }, [pathname]);
 
   const handleToggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: pathname === "/aggregate-insights" ? "hidden" : "auto" }}>
       {/* Sidebar */}
-      <Box
-        sx={{
-          position: "fixed",
-          height: "100vh",
-          overflowY: "auto",
-          zIndex: 1000,
-        }}
-      >
-        <CustomSidebar collapsed={collapsed} />
-      </Box>
+      {pathname !== "/" && (
+        <Sidebar collapsed={collapsed} />
+      )}
 
       {/* Main Content */}
-      <Box
-        sx={{
-          flexGrow: 1,
-          marginLeft: collapsed ? "80px" : "250px",
-          overflowY: "auto",
-          height: "100vh",
-        }}
-      >
-        {/* AppBar */}
-        <AppBar className="!bg-gradient-to-r from-blue-800 to-blue-300" position="sticky">
-          <Toolbar>
-            <IconButton color="inherit" aria-label="open drawer" onClick={handleToggleSidebar} edge="start">
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              {tab}
-            </Typography>
-          </Toolbar>
-        </AppBar>
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", height: "100vh" }}>
+        {/* Navbar */}
+        <Navbar handleToggleSidebar={handleToggleSidebar} pathname={pathname} />
 
         {/* Page Content */}
-        <Box component="main" sx={{ p: 3 }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            overflowY: pathname === "/aggregate-insights" ? "hidden" : "auto",
+          }}
+        >
           {children}
         </Box>
       </Box>
     </Box>
   );
 }
+
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -113,3 +98,92 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
+// 🛠️ Updated Navbar Component
+const Navbar = ({ handleToggleSidebar, pathname }: { handleToggleSidebar: () => void; pathname: string }) => {
+  const router = useRouter();
+  const [tabIndex, setTabIndex] = useState(0);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabIndex(newValue);
+    console.log("newValue", typeof newValue, newValue);
+    switch (newValue) {
+      case 0:
+        setAnchorEl(null); // Keep dropdown closed when clicking main tab
+        router.push('/');
+        break;
+      case 1:
+        setAnchorEl(null); // Keep dropdown closed when clicking main tab
+        router.push('/aggregate-insights');
+        break;
+      case 2:
+        router.push('/sentiment-analysis');
+        break;
+
+    }
+  };
+
+  const handleOpenDropdown = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseDropdown = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <AppBar className="!bg-gradient-to-r from-gray-600 to-gray-800" position="sticky">
+      <Toolbar>
+        {/* Sidebar Toggle */}
+        {
+          pathname === '/' ? <div className="mr-4"></div> : <IconButton color="inherit" aria-label="open drawer" onClick={handleToggleSidebar} edge="start">
+            <MenuIcon />
+          </IconButton>
+
+        }
+        {/* Tabs */}
+        <Tabs value={tabIndex} onChange={handleChange} aria-label="dashboard tabs" textColor="inherit">
+          {/* Insights with Dropdown */}
+          {/* Earnings Call Tab */}
+          <Tab label="Dashboard" />
+          <Tab label="Insights" />
+          {/* <Tab
+            label="Insights"
+            onClick={handleOpenDropdown}
+            aria-controls={anchorEl ? 'insights-menu' : undefined}
+            aria-haspopup="true"
+          />
+          <Menu
+            id="insights-menu"
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseDropdown}
+          >
+            <MenuItem
+              onClick={() => {
+                handleCloseDropdown();
+                router.push('/business-insights');
+              }}
+            >
+              Business Insights
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleCloseDropdown();
+                router.push('/aggregate-insights');
+              }}
+            >
+              Aggregate Insights
+            </MenuItem>
+          </Menu> */}
+
+
+
+          {/* Sentiment Analysis Tab */}
+          <Tab label="Sentiment Analysis" />
+        </Tabs>
+      </Toolbar>
+    </AppBar>
+  );
+};

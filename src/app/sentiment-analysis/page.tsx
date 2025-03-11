@@ -128,19 +128,11 @@ export default function SentimentAnalysis() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50 px-6 py-0 space-y-6">
+        <div className="flex flex-col bg-gray-50 px-6 py-6 space-y-6">
             {/* Header */}
 
             <CustomHeader></CustomHeader>
-            {/* Filter Options */}
-            <FilterOptions
-                selectedCompany={selectedCompany}
-                selectedYear={selectedYear}
-                selectedQuarter={selectedQuarter}
-                handleCompanyChange={handleCompanyChange}
-                handleQuarterChange={handleQuarterChange}
-                handleYearChange={handleYearChange}
-            />
+
 
             {/* Financial Metrics & Market Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
@@ -174,10 +166,6 @@ export default function SentimentAnalysis() {
 
             </Card>
             <ChatBox isOpen={isChatOpen} toggleChat={() => setIsChatOpen(!isChatOpen)} chats={chats} isLoading={isLoading} messagesEndRef={messagesEndRef}></ChatBox>
-
-
-
-
         </div>
     );
 }
