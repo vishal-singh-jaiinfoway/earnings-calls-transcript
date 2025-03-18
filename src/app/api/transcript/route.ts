@@ -16,7 +16,7 @@ export async function POST(req:Request) {
     try {
         const body = await req.json();
         const { selectedCompany, selectedQuarter, selectedYear } = body;
-        const ticker = selectedCompany.ticker;
+        const ticker = selectedCompany.ticker || selectedCompany.value;
         
         const quarter = quarters[selectedQuarter as keyof typeof quarters ];
 

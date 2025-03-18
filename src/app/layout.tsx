@@ -1,54 +1,43 @@
 'use client';
-import { Inter, Geist, Geist_Mono, Urbanist, Lora } from "next/font/google";
-import { useEffect, useState } from 'react';
-import { CssBaseline, IconButton, Box, AppBar, Toolbar, Tabs, Tab, Menu, MenuItem } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import { Sora } from "next/font/google";
+import { useContext, useEffect, useState } from 'react';
+import { CssBaseline, IconButton, Box, AppBar, Toolbar, Tabs, Tab, Button, Avatar } from '@mui/material';
 import './globals.css';
 import Sidebar from './components/sidebar';
-import { Provider, useSelector } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import { store } from "../../store/store";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { createContext } from "react";
+import LoginModal from "./components/auth/login";
+import SignupModal from "./components/auth/register";
+import { setIsUserLoggedIn } from "../../store/sidebarSlice";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const urbanist = Urbanist({ subsets: ['latin'], weight: ["400"] });
-const lora = Lora({ subsets: ['latin'], weight: ["400"] });
+const sora = Sora({ subsets: ['latin'], weight: ["400"] });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const tabs = {
-  transcript: 'Transcript',
-  'historical-earnings': 'Historical Earnings',
-  'sentiment-analysis': 'Sentiment Analysis',
-  'full-summary': 'Full Summary',
-  'tweet-summary': 'Tweet Summary',
-  'unconventional-findings': 'Unconventional Findings',
-  'strategic-updates': 'Strategic Updates',
-  'guidance-outlook': 'Guidance Outlook',
-  'qa-session': 'QA Session',
-  'business-insights': 'Business Insights',
-  'aggregate-insights': 'Aggregate Insights',
-  'highlights-takeaways': 'Highlights & Takeaways',
-  'risk-analysis': 'Risk Analysis',
-  'earnings-trend': 'Earnings Call Trends'
-};
-
-const getTabName = (tab: string) => tabs[tab as keyof typeof tabs] || '';
+export const ParentContext = createContext();
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const pathname = usePathname();
+  const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
+  const [isSignupOpen, setIsSignupOpen] = useState<boolean>(false);
+
+  const router = useRouter();
+
+  const isUserLoggedIn = useSelector((state) => state.sidebar.isUserLoggedIn);
+  const dispatch = useDispatch()
 
   useEffect(() => {
-    if (pathname === "/aggregate-insights") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      dispatch(setIsUserLoggedIn(true))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pathname === "/insights") {
       setCollapsed(false);
     }
   }, [pathname]);
@@ -57,30 +46,52 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     setCollapsed(!collapsed);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    dispatch(setIsUserLoggedIn(false))
+    router.push("/");
+  }
+
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: pathname === "/aggregate-insights" ? "hidden" : "auto" }}>
-      {/* Sidebar */}
-      {pathname !== "/" && (
-        <Sidebar collapsed={collapsed} />
-      )}
+    <ParentContext.Provider value={{ isLoginOpen, isSignupOpen, setIsLoginOpen, setIsSignupOpen, handleToggleSidebar, pathname, collapsed }}>
 
-      {/* Main Content */}
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", height: "100vh" }}>
-        {/* Navbar */}
-        <Navbar handleToggleSidebar={handleToggleSidebar} pathname={pathname} />
+      <Box sx={{ display: "flex", height: "100vh", overflow: pathname === "/insights" ? "hidden" : "auto" }}>
+        {/* Sidebar */}
+        {["/insights", "/sentiment-analysis", "/competitive-insights", "/transcript"].includes(pathname) && (
+          <Sidebar />
+        )}
 
-        {/* Page Content */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            overflowY: pathname === "/aggregate-insights" ? "hidden" : "auto",
-          }}
-        >
-          {children}
+        {/* Main Content */}
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", height: "100vh" }}>
+          {/* Navbar */}
+          <Navbar handleLogout={handleLogout} />
+
+          {/* Page Content */}
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              overflowY: pathname === "/insights" ? "hidden" : "auto",
+            }}
+
+          >
+            {children}
+            {/* Login and Signup Modals */}
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              setIsSignupOpen={setIsSignupOpen}
+            />
+            <SignupModal
+              isOpen={isSignupOpen}
+              onClose={() => setIsSignupOpen(false)}
+              setIsLoginOpen={setIsLoginOpen}
+            />
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </ParentContext.Provider>
+
   );
 }
 
@@ -89,7 +100,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${lora.className} ${inter.variable} antialiased`}>
+      <body className={`${sora.className} antialiased`}>
         <Provider store={store}>
           <CssBaseline />
           <LayoutContent>{children}</LayoutContent>
@@ -99,91 +110,139 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-// 🛠️ Updated Navbar Component
-const Navbar = ({ handleToggleSidebar, pathname }: { handleToggleSidebar: () => void; pathname: string }) => {
+
+
+const Navbar = ({ handleLogout }) => {
   const router = useRouter();
   const [tabIndex, setTabIndex] = useState(0);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { setIsLoginOpen, setIsSignupOpen, collapsed, pathname, handleToggleSidebar } = useContext(ParentContext)
+  const isUserLoggedIn = useSelector((state) => state.sidebar.isUserLoggedIn);
 
-  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_event, newValue) => {
     setTabIndex(newValue);
-    console.log("newValue", typeof newValue, newValue);
-    switch (newValue) {
-      case 0:
-        setAnchorEl(null); // Keep dropdown closed when clicking main tab
-        router.push('/');
-        break;
-      case 1:
-        setAnchorEl(null); // Keep dropdown closed when clicking main tab
-        router.push('/aggregate-insights');
-        break;
-      case 2:
-        router.push('/sentiment-analysis');
-        break;
-
-    }
+    const routes = ["/", "/insights", "/sentiment-analysis", "/competitive-insights", "/transcript", "/about"];
+    router.push(routes[newValue]);
   };
 
-  const handleOpenDropdown = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
 
-  const handleCloseDropdown = () => {
-    setAnchorEl(null);
-  };
 
   return (
-    <AppBar className="!bg-gradient-to-r from-gray-600 to-gray-800" position="sticky">
-      <Toolbar>
-        {/* Sidebar Toggle */}
-        {
-          pathname === '/' ? <div className="mr-4"></div> : <IconButton color="inherit" aria-label="open drawer" onClick={handleToggleSidebar} edge="start">
-            <MenuIcon />
-          </IconButton>
+    <AppBar
+      position="sticky"
+      sx={{
+        backgroundColor: "#ffffff",
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.08)",
+        padding: "2px 16px",
+        alignItems: "between",
+      }}
+    >
 
-        }
-        {/* Tabs */}
-        <Tabs value={tabIndex} onChange={handleChange} aria-label="dashboard tabs" textColor="inherit">
-          {/* Insights with Dropdown */}
-          {/* Earnings Call Tab */}
-          <Tab label="Dashboard" />
+      <Toolbar className="flex items-center justify-between">
+
+        <div className="flex items-center justify-center gap-2">
+          {["/", "/about"].includes(pathname) && <img src="/images/icons/logo.png" alt="Logo" className="h-12" />}
+          {
+            ["/insights", "/sentiment-analysis", "/competitive-insights", "/transcript"].includes(pathname) && <IconButton
+              color="inherit"
+              onClick={handleToggleSidebar}
+              edge="start"
+              className="hover:bg-gray-200 transition duration-300 ease-in-out rounded-lg"
+            >
+              {
+                collapsed ? <PanelRightOpen className="text-gray-600  transition-colors duration-300" /> : <PanelRightClose className="text-gray-600 transition-colors duration-300" />
+              }
+
+            </IconButton>
+          }
+        </div>
+
+
+
+        {/* Navigation Tabs */}
+        <Tabs
+          value={tabIndex}
+          onChange={handleChange}
+          textColor="inherit"
+          sx={{
+            "& .MuiTab-root": {
+              color: "black",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              padding: "10px 20px",
+              transition: "color 0.3s",
+              "&:hover": { color: "#DA6486" },
+            },
+            "& .Mui-selected": {
+              color: "#DA6486",
+              fontWeight: 600,
+              borderBottom: "2px solid #DA6486",
+            },
+            "& .MuiTabs-indicator": { backgroundColor: "#DA6486" },
+          }}
+        >
+          <Tab label="Home" />
           <Tab label="Insights" />
-          {/* <Tab
-            label="Insights"
-            onClick={handleOpenDropdown}
-            aria-controls={anchorEl ? 'insights-menu' : undefined}
-            aria-haspopup="true"
-          />
-          <Menu
-            id="insights-menu"
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleCloseDropdown}
-          >
-            <MenuItem
-              onClick={() => {
-                handleCloseDropdown();
-                router.push('/business-insights');
-              }}
-            >
-              Business Insights
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                handleCloseDropdown();
-                router.push('/aggregate-insights');
-              }}
-            >
-              Aggregate Insights
-            </MenuItem>
-          </Menu> */}
-
-
-
-          {/* Sentiment Analysis Tab */}
-          <Tab label="Sentiment Analysis" />
+          <Tab label="Sentiment" />
+          <Tab label="Competitive" />
+          <Tab label="Transcript" />
         </Tabs>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
+          {/* Login Button */}
+          {
+            isUserLoggedIn ? <Button onClick={handleLogout}
+              variant="text"
+              sx={{
+                color: "gray",
+                fontWeight: 600,
+                textTransform: "none",
+                "&:hover": { color: "#DA6486" },
+              }}
+            >
+              Logout
+            </Button> : <Button onClick={() => setIsLoginOpen(true)}
+              variant="text"
+              sx={{
+                color: "gray",
+                fontWeight: 600,
+                textTransform: "none",
+                "&:hover": { color: "#DA6486" },
+              }}
+            >
+              Login
+            </Button>
+          }
+
+
+
+
+          {/* Signup Button */}
+          <Button onClick={() => setIsSignupOpen(true)}
+            variant="contained"
+            sx={{
+              backgroundColor: "#DA6486",
+              color: "#ffffff",
+              borderRadius: "20px",
+              padding: "6px 20px",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              transition: "all 0.3s",
+              "&:hover": {
+                backgroundColor: "#b85988",
+                boxShadow: "0px 6px 16px rgba(184, 89, 136, 0.3)",
+              },
+            }}
+          >
+            Sign Up
+          </Button>
+
+          {/* Avatar */}
+          <Avatar alt="User" src="/avatar.jpg" sx={{ width: 36, height: 36 }} />
+        </div>
       </Toolbar>
     </AppBar>
   );
 };
+
+

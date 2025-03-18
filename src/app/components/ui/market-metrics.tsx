@@ -1,118 +1,91 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   IgrFinancialChart,
   IgrFinancialChartModule,
 } from "igniteui-react-charts";
+import { useEffect, useState } from "react";
 
 IgrFinancialChartModule.register();
 
-const fullData = [
-  { date: new Date(2023, 0, 1), open: 50, high: 52, low: 49, close: 51 },
-  { date: new Date(2023, 1, 1), open: 51, high: 54, low: 50, close: 52 },
-  { date: new Date(2023, 2, 1), open: 52, high: 56, low: 51, close: 55 },
-  { date: new Date(2023, 3, 1), open: 55, high: 58, low: 54, close: 56 },
-  { date: new Date(2023, 4, 1), open: 56, high: 60, low: 55, close: 58 },
-  { date: new Date(2023, 5, 1), open: 58, high: 63, low: 57, close: 60 },
-  { date: new Date(2023, 6, 1), open: 60, high: 64, low: 59, close: 62 },
-  { date: new Date(2023, 7, 1), open: 62, high: 66, low: 61, close: 64 },
-  { date: new Date(2023, 8, 1), open: 64, high: 68, low: 63, close: 66 },
-  { date: new Date(2023, 9, 1), open: 66, high: 70, low: 65, close: 68 },
-  { date: new Date(2023, 10, 1), open: 68, high: 72, low: 67, close: 70 },
-  { date: new Date(2023, 11, 1), open: 70, high: 74, low: 69, close: 72 },
-  { date: new Date(2024, 0, 1), open: 72, high: 76, low: 71, close: 74 },
-  { date: new Date(2024, 1, 1), open: 74, high: 78, low: 73, close: 76 },
-  { date: new Date(2024, 2, 1), open: 76, high: 80, low: 75, close: 78 },
-  { date: new Date(2024, 3, 1), open: 78, high: 82, low: 77, close: 80 },
-];
+function MarketMetrics({ financialMetricsData, isLoading }: any) {
+  const [marketData, setMarketData] = useState({});
+  const [revenueTrends, setRevenueTrends] = useState([]);
 
-const marketData = [
-  { label: "Market Cap", value: "$2.89T" },
-  { label: "Beta", value: "0.91" },
-  { label: "P/E Ratio", value: "31.25" },
-  { label: "EPS", value: "12.43" },
-  { label: "Dividend", value: "$3.16" },
-  { label: "Dividend Yield", value: "0.81%" },
-  { label: "Next Earnings Date", value: "2025-04-23" },
-];
-
-const TIME_RANGES = [
-  { label: "1M", value: "1M" },
-  { label: "6M", value: "6M" },
-  { label: "1Y", value: "1Y" },
-  { label: "5Y", value: "5Y" },
-];
-
-function MarketMetrics() {
-  const [filteredData, setFilteredData] = useState(fullData);
-  const [activeRange, setActiveRange] = useState("1Y");
-
-  // ✅ Filter data based on selected range
-  const filterData = (range: string) => {
-    const endDate = new Date();
-    let startDate = new Date();
-
-    switch (range) {
-      case "1M":
-        startDate.setMonth(endDate.getMonth() - 1);
-        break;
-      case "6M":
-        startDate.setMonth(endDate.getMonth() - 6);
-        break;
-      case "1Y":
-        startDate.setFullYear(endDate.getFullYear() - 1);
-        break;
-      case "5Y":
-        startDate.setFullYear(endDate.getFullYear() - 5);
-        break;
-      default:
-        startDate = new Date(fullData[0].date);
+  useEffect(() => {
+    if (financialMetricsData?.marketData) {
+      setMarketData(financialMetricsData?.marketData);
+    } else {
+      setMarketData({});
     }
-
-    const filtered = fullData.filter(
-      (data) => data.date >= startDate && data.date <= endDate,
-    );
-
-    setFilteredData(filtered);
-    setActiveRange(range);
-  };
+    if (financialMetricsData?.revenueTrends) {
+      setRevenueTrends(financialMetricsData?.revenueTrends);
+    } else {
+      setRevenueTrends([]);
+    }
+  }, [financialMetricsData]);
 
   return (
-    <Card className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-xl rounded-2xl p-6 border border-blue-700">
+    <Card className="bg-white text-gray-800 shadow-sm rounded-xl p-4 border border-gray-200">
       {/* Financial Stock Chart */}
       <CardContent className="w-full h-64">
-        <IgrFinancialChart
-          width="100%"
-          height="100%"
-          dataSource={filteredData}
-          chartTitle="Microsoft Revenue Trends"
-          chartType="Line" // Options: Candle, Bar, Column, Line, OHLC
-          isToolbarVisible={true}
-          brushes={["#60A5FA"]}
-          outlines={["#60A5FA"]}
-          negativeOutlines={["#93C5FD"]}
-          zoomSliderType="None"
-          xAxisLabelTextColor="#D1D5DB"
-          yAxisLabelTextColor="#D1D5DB"
-          xAxisMajorStroke="#374151"
-          yAxisMajorStroke="#374151"
-        />
+        {revenueTrends.length > 0 ? (
+          <IgrFinancialChart
+            width="100%"
+            height="100%"
+            dataSource={revenueTrends}
+            chartTitle="Revenue Trends"
+            chartType="Line"
+            isToolbarVisible={false}
+            brushes={["#6B7280"]}
+            outlines={["#6B7280"]}
+            negativeOutlines={["#D1D5DB"]}
+            zoomSliderType="None"
+            xAxisLabelTextColor="#6B7280"
+            yAxisLabelTextColor="#6B7280"
+            xAxisMajorStroke="#E5E7EB"
+            yAxisMajorStroke="#E5E7EB"
+          />
+        ) : (
+          <div className="flex justify-center items-center h-full text-gray-400">
+            No revenue trends data available.
+          </div>
+        )}
       </CardContent>
 
       {/* Market Data */}
-      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6 text-sm">
-        {marketData.map((data, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-center border-b border-blue-700 pb-2"
-          >
-            <span className="font-semibold text-blue-300">{data.label}:</span>
-            <span className="text-blue-200">{data.value}</span>
-          </div>
-        ))}
-      </CardContent>
+      {Object.keys(marketData).length > 0 ? (
+        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 text-sm">
+          {[
+            { label: "Market Cap", value: marketData?.marketCap?.toLocaleString() || "N/A" },
+            { label: "Beta", value: marketData?.beta ?? "N/A" },
+            { label: "P/E Ratio", value: marketData?.peRatio?.toFixed(2) || "N/A" },
+            { label: "Dividend", value: marketData?.dividend || "N/A" },
+            { label: "Dividend Yield", value: marketData?.dividendYield ?? "N/A" },
+            { label: "EPS", value: marketData?.eps?.toFixed(2) || "N/A" },
+            { label: "Next Earnings Date", value: marketData?.nextEarningsDate || "N/A" },
+            { label: "Highest Price", value: marketData?.highestPrice?.toFixed(2) || "N/A" },
+            { label: "Lowest Price", value: marketData?.lowestPrice?.toFixed(2) || "N/A" },
+            { label: "Average Price", value: marketData?.averagePrice?.toFixed(2) || "N/A" },
+            {
+              label: "Change Percent",
+              value: marketData?.changePercent
+                ? `${(marketData?.changePercent * 100).toFixed(2)}%`
+                : "N/A",
+            },
+          ].map((data, index) => (
+            <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
+              <span className="font-medium text-gray-600">{data.label}:</span>
+              <span className="text-gray-700">{data.value}</span>
+            </div>
+          ))}
+        </CardContent>
+      ) : (
+        <div className="text-gray-400 text-center mt-4">
+          No market data available.
+        </div>
+      )}
     </Card>
   );
 }

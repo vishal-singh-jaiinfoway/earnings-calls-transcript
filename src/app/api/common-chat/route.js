@@ -129,13 +129,13 @@ const getAnswerForPrompt = async function* (source, prompt, chats, context, pers
 };
 
 // Function to generate response from Claude
-const generateResponse = async (prompt, rawPrompt, chats,previousPrompts, selectedCompanies, selectedQuarter, selectedYear) => {
+const generateResponse = async (prompt, chats, previousPrompts, selectedCompanies, selectedQuarter, selectedYear) => {
     try {
 
-        const optimizedPrompt = await optimizePrompt(previousPrompts, previousPrompts.length ? rawPrompt : prompt, selectedCompanies, selectedQuarter, selectedYear, chats);
+        const optimizedPrompt = await optimizePrompt(previousPrompts, prompt, selectedCompanies, selectedQuarter, selectedYear, chats);
 
         const queryParamsArray = optimizedPrompt?.queryParamsArray;
-        // console.log("queryParamsArray", queryParamsArray)
+        console.log("queryParamsArray", queryParamsArray)
         if (!queryParamsArray || queryParamsArray.length === 0 || queryParamsArray[0].ticker === "ALL") {
             return "⚠️ **Error:** The request could not be processed. Please refine your query and try again.";
         }
@@ -214,11 +214,11 @@ const optimizePrompt = async (previousPrompts, rawPrompt, selectedCompanies, sel
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { inputText, inputValue, chats, 
+        const { inputText, chats, 
              previousPrompts=[], selectedCompanies, selectedQuarter, selectedYear } = body;
 console.log("body",body)
 
-        const stream = await generateResponse(inputText, inputValue, chats, previousPrompts, selectedCompanies, selectedQuarter, parseInt(selectedYear));
+        const stream = await generateResponse(inputText, chats, previousPrompts, selectedCompanies, selectedQuarter, parseInt(selectedYear));
 
         return new Response(new ReadableStream({
             async start(controller) {

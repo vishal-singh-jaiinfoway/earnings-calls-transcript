@@ -1,13 +1,19 @@
 "use client";
-import Select from "react-select";
+import Select, { StylesConfig, MultiValue } from "react-select";
 import { companies, quarters, years } from "../../../../public/data";
-import { Label } from "../ui/label";
 import { useDispatch, useSelector } from "react-redux";
+import { usePathname } from "next/navigation";
 import {
   setCompanies,
+  setEarningsData,
+  setFoundationModel,
+  setPersona,
   setQuarter,
   setYear,
 } from "../../../../store/sidebarSlice";
+import { SidebarState } from "../../../../store/interface"; // Import RootState for correct typing
+import { useContext } from "react";
+import { ParentContext } from "@/layout";
 
 // Type definitions
 interface Company {
@@ -15,149 +21,225 @@ interface Company {
   name: string;
 }
 
+interface OptionType {
+  value: string;
+  label: string;
+}
+
+const personas: string[] = [
+  "Controller (Chief Accounting Officer)",
+  "Treasurer",
+  "Head of Financial Planning & Analysis (FP&A)",
+  "Head of Risk & Compliance",
+  "Head of Taxation",
+  "Investor Relations Director",
+  "Head of Procurement & Vendor Management",
+];
+
+const models: OptionType[] = [
+  { name: "Claude 3.5 Sonnet v1", value: "anthropic.claude-3-5-sonnet-20240620-v1:0" },
+  { name: "Claude 3.5 Sonnet v2", value: "anthropic.claude-3-5-sonnet-v2" },
+  { name: "Claude 3.5 Haiku", value: "anthropic.claude-3-haiku-20240307-v1:0" },
+].map((model) => ({
+  value: model.value,
+  label: model.name,
+}));
+
+// Custom Styles for Select
+const customStyles: StylesConfig<OptionType, true> = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: "#fff",
+    borderColor: state.isFocused ? "#a855f7" : "#e5e7eb",
+    color: "#111827",
+    borderRadius: "0.75rem",
+    boxShadow: state.isFocused ? "0 0 12px rgba(168, 85, 247, 0.3)" : "none",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+    "&:hover": {
+      borderColor: "#a855f7",
+    },
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: "#fafafa",
+    borderRadius: "0.75rem",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "#a855f7"
+      : state.isFocused
+        ? "#f3e8ff"
+        : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#111827",
+    "&:hover": {
+      backgroundColor: "#f3e8ff",
+      color: "#111827",
+    },
+    transition: "background-color 0.2s ease, color 0.2s ease",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: "#6b7280",
+  }),
+  multiValue: (base) => ({
+    ...base,
+    backgroundColor: "#f3e8ff",
+    borderRadius: "0.5rem",
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: "#9333ea",
+  }),
+  multiValueRemove: (base) => ({
+    ...base,
+    color: "#9333ea",
+    "&:hover": {
+      backgroundColor: "#f3e8ff",
+      color: "#9333ea",
+    },
+  }),
+};
 
 const FilterOptions = () => {
   const dispatch = useDispatch();
-  const foundationModel = useSelector((state: { sidebar: { foundationModel: any } }) => state.sidebar.foundationModel);
-  const fmTemperature = useSelector((state: { sidebar: { fmTemperature: any } }) => state.sidebar.fmTemperature);
-  const fmMaxTokens = useSelector((state: { sidebar: { fmMaxTokens: any } }) => state.sidebar.fmMaxTokens);
-  const context = useSelector((state: { sidebar: { context: any } }) => state.sidebar.context);
-  const persona = useSelector((state: { sidebar: { persona: any } }) => state.sidebar.persona);
+  const pathname = usePathname();
+  const { collapsed } = useContext(ParentContext)
 
-  const selectedCompanies = useSelector((state: { sidebar: { selectedCompanies: any } }) => state.sidebar.selectedCompanies);
-  const selectedYear = useSelector((state: { sidebar: { selectedYear: any } }) => state.sidebar.selectedYear);
-  const selectedQuarter = useSelector((state: { sidebar: { selectedQuarter: any } }) => state.sidebar.selectedQuarter);
+  // Correctly type the state with RootState
+  const selectedCompanies = useSelector(
+    (state: any) => state.sidebar.selectedCompanies
+  );
+  const selectedYear = useSelector(
+    (state: any) => state.sidebar.selectedYear
+  );
+  const selectedQuarter = useSelector(
+    (state: any) => state.sidebar.selectedQuarter
+  );
+
+  const selectedPersona = useSelector(
+    (state: any) => state.sidebar.persona
+  );
+
+  const selectedModal = useSelector(
+    (state: any) => state.sidebar.foundationModel
+  );
 
 
-  const companyOptions = companies?.map((company) => ({
+  const companyOptions: OptionType[] = companies.map((company: Company) => ({
     value: company.ticker,
     label: company.name,
   }));
 
-  const handleCompanySelect = (selectedOptions: any) => {
-    if (selectedOptions.length > 5) {
-      selectedOptions.pop()
-      return alert("You can only select up to 5 companies")
+  const personaOptions: OptionType[] = personas.map((persona) => ({
+    value: persona,
+    label: persona,
+  }));
+
+  const handleCompanySelect = async (selectedOptions: MultiValue<OptionType>) => {
+    if (pathname === "/insights" && selectedOptions.length > 5) {
+      alert("You can only select up to 5 companies");
+      return;
     }
-    dispatch(setCompanies(selectedOptions));
+    if (["/insights", "/competitive-insights"].includes(pathname) && selectedOptions.length) {
+      dispatch(setCompanies(selectedOptions.map((option) => option.value)));
+    }
+
+    if (["/transcript", "/sentiment-analysis"].includes(pathname)) {
+      dispatch(setCompanies([selectedOptions?.value]));
+      await fetchDataFromYahooFinance(selectedOptions?.value);
+    }
+  };
+
+
+  const fetchDataFromYahooFinance = async (symbol) => {
+    if (!symbol) return;
+    try {
+      const res = await fetch(`/api/yahoo-finance?symbol=${symbol}`);
+      const result = await res.json();
+      dispatch(setEarningsData(result))
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+    <div
+      className={`transition-all duration-300 ${!collapsed ? "p-8 opacity-100 space-y-6" : "p-0 opacity-0"
+        } bg-white border border-gray-200 shadow-lg h-screen overflow-hidden`}
+    >
       {/* Company Multi-Select */}
-      <div className="mt-8"></div>
       <div>
-        <Label className="text-sm font-medium text-gray-300 mb-2">
+        <label className="text-sm font-medium text-gray-600 block mb-2">
           Company
-        </Label>
-        <Select
+        </label>
+        <Select 
           options={companyOptions}
-          isMulti
+          isMulti={["/insights", "/competitive-insights"].includes(pathname)}
+          value={companyOptions.filter((option) =>
+            selectedCompanies.includes(option.value)
+          )}
           onChange={handleCompanySelect}
-          //value={selectedCompanies || []}
-          placeholder="Select companies"
-          styles={{
-            control: (provided, state) => ({
-              ...provided,
-              backgroundColor: "#111827", // Dark background
-              borderColor: state.isFocused ? "#2563eb" : "#1f2937", // Blue on focus
-              color: "#ffffff",
-              borderRadius: "0.5rem",
-              boxShadow: state.isFocused
-                ? "0 0 0 2px rgba(37, 99, 235, 0.5)"
-                : "none",
-              "&:hover": {
-                borderColor: "#2563eb",
-              },
-            }),
-            placeholder: (provided) => ({
-              ...provided,
-              color: "#9ca3af", // Light gray
-            }),
-            menu: (provided) => ({
-              ...provided,
-              backgroundColor: "#111827",
-              borderRadius: "0.5rem",
-            }),
-            option: (provided, state) => ({
-              ...provided,
-              backgroundColor: state.isSelected
-                ? "#2563eb"
-                : state.isFocused
-                  ? "#1e40af"
-                  : "#111827",
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: "#1e40af",
-              },
-            }),
-            multiValue: (provided) => ({
-              ...provided,
-              backgroundColor: "#2563eb",
-              borderRadius: "0.25rem",
-            }),
-            multiValueLabel: (provided) => ({
-              ...provided,
-              color: "#ffffff",
-            }),
-            multiValueRemove: (provided) => ({
-              ...provided,
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: "#1e40af",
-                color: "#ffffff",
-              },
-            }),
-          }}
+          placeholder="Select companies (max 5)"
+          styles={customStyles}
         />
       </div>
 
       {/* Year Select */}
       <div>
-        <Label className="text-sm font-medium text-gray-300 mb-2">
+        <label className="text-sm font-medium text-gray-600 block mb-2">
           Year
-        </Label>
-        <select
-          onChange={(e) => {
-            dispatch(setYear(e.target.value));
-      //handleYearChange(e.target.value);
-          }}
-          value={selectedYear}
-          className="w-full bg-gray-900 border border-gray-700 text-gray-300 py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-800 transition duration-200"
-        >
-          <option value="" disabled>
-            Select a year
-          </option>
-          {years?.map((year, index) => (
-            <option key={index} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        </label>
+        <Select
+          options={years.map((year) => ({ value: year, label: String(year) }))}
+          value={selectedYear ? { value: selectedYear, label: String(selectedYear) } : null}
+          onChange={(option: any) => dispatch(setYear(option?.value))}
+          placeholder="Select a year"
+          styles={customStyles}
+        />
       </div>
 
       {/* Quarter Select */}
       <div>
-        <Label className="text-sm font-medium text-gray-300 mb-2">
+        <label className="text-sm font-medium text-gray-600 block mb-2">
           Quarter
-        </Label>
-        <select
-          onChange={(e) => {
-            dispatch(setQuarter(e.target.value));
-        //handleQuarterChange(e.target.value);
-          }}
-          value={selectedQuarter}
-          className="w-full bg-gray-900 border border-gray-700 text-gray-300 py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-800 transition duration-200"
-        >
-          <option value="" disabled>
-            Select a quarter
-          </option>
-          {quarters?.map((quarter, index) => (
-            <option key={index} value={quarter}>
-              {quarter}
-            </option>
-          ))}
-        </select>
+        </label>
+        <Select
+          options={quarters.map((quarter) => ({ value: quarter, label: quarter }))}
+          value={selectedQuarter ? { value: selectedQuarter, label: selectedQuarter } : null}
+          onChange={(option: any) => dispatch(setQuarter(option?.value))}
+          placeholder="Select a quarter"
+          styles={customStyles}
+        />
+      </div>
+
+      {/* Persona Select */}
+      <div>
+        <label className="text-sm font-medium text-gray-600 block mb-2">
+          Persona
+        </label>
+        <Select
+          options={personaOptions}
+          value={selectedPersona ? { value: selectedPersona, label: selectedPersona } : null}
+          onChange={(option: any) => dispatch(setPersona(option?.value))}
+          placeholder="Select persona"
+          styles={customStyles}
+        />
+      </div>
+
+      {/* Model Select */}
+      <div>
+        <label className="text-sm font-medium text-gray-600 block mb-2">
+          Model
+        </label>
+        <Select
+          options={models}
+          value={selectedModal ? { value: selectedModal, label: selectedModal } : null}
+          onChange={(option: any) => dispatch(setFoundationModel(option?.value))}
+          placeholder="Select model"
+          styles={customStyles}
+        />
       </div>
     </div>
   );

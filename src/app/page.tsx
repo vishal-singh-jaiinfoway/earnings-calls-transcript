@@ -1,168 +1,148 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Brain, Smile, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
-import ChatDemo from './components/ui/chatDemo';
+import { ArrowRight } from 'lucide-react';
+import { useState, useContext } from 'react';
+import Image from 'next/image';
+import { Button } from './components/ui/button';
+import { Input } from './components/ui/input';
+import VideoPlay from './components/home/homepage/VideoPlay';
+import TabComponent from './components/home/homepage/TabComponent';
+import { ParentContext } from './layout';
+import ChatStep from './components/home/homepage/EarningsAssitant';
+import CompaniesCarousel from './components/home/homepage/CompaniesCarousel';
+import Footer from './components/home/homepage/Footer';
 
-// Simulated Stock Market Data
-const stockData = [
-  { name: 'Jan', value: 70 },
-  { name: 'Feb', value: 80 },
-  { name: 'Mar', value: 75 },
-  { name: 'Apr', value: 90 },
-  { name: 'May', value: 85 },
-];
 
 export default function LandingPage() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const { setIsLoginOpen } = useContext(ParentContext)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="relative h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6">
-      {/* Background Chart */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.2 }}
-        transition={{ duration: 1 }}
-        className="absolute inset-0 z-0 pointer-events-none"
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={stockData} margin={{ top: 20, right: 30, left: 0, bottom: 10 }}>
-            <defs>
-              <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="name"
-              stroke="#bbb"
-              tick={{ fontSize: 14, fill: '#bbb' }}
-              tickLine={false}
-              axisLine={{ stroke: '#444' }}
-            />
-            <YAxis
-              stroke="#bbb"
-              tick={{ fontSize: 14, fill: '#bbb' }}
-              tickLine={false}
-              axisLine={{ stroke: '#444' }}
-              domain={[60, 100]}
-            />
-            <CartesianGrid stroke="#444" strokeDasharray="4 4" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#222',
-                border: '1px solid #555',
-                borderRadius: '8px',
-                color: '#ddd',
-              }}
-              itemStyle={{ color: '#ddd' }}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="url(#blueGradient)"
-              strokeWidth={3}
-              dot={(props) => {
-                const { cx, cy, index } = props;
-                const isActive = index === activeIndex;
+    <div className="relative m-8 flex flex-col items-center justify-center p-0">
+      <div className="grid grid-rows-1 gap-4 min-h-full w-full bg-[#fff3ff] p-[60px] place-items-center">
+        <div className='grid grid-cols-2 gap-4'>
+          {/* Left Column */}
+          <div className="flex flex-col justify-center text-center">
+            <h1 className="text-4xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-purple-600 to-orange-500 text-transparent bg-clip-text">
 
-                return (
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={isActive ? 8 : 6}
-                    fill="#3b82f6"
-                    stroke={isActive ? '#60a5fa' : '#3b82f6'}
-                    strokeWidth={isActive ? 3 : 2}
-                    className={`transition-all duration-200 ${isActive ? 'glow' : ''
-                      }`}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onMouseLeave={() => setActiveIndex(null)}
-                  />
-                );
-              }}
-              activeDot={{
-                r: 10,
-                fill: '#60a5fa',
-                strokeWidth: 3,
-                stroke: '#3b82f6',
-                className: 'glow',
-              }}
+
+              Smarter Earnings Call Insights,<br />Powered by AI
+            </h1>
+            <p className="mt-4 text-lg font-regular text-gray-600">
+              Decode earnings calls in seconds — no more endless transcripts
+            </p>
+
+            {/* Styled Button */}
+            <Button
+              onClick={() => setIsOpen(true)}
+              className="
+    group mt-6 rounded-full w-[20vw] max-w-[280px] py-6 px-6 text-white font-semibold
+    bg-[#DA6486]
+    shadow-lg shadow-purple-300/40
+    transition-transform transform hover:scale-105 hover:shadow-xl hover:bg-[#E88FA7]
+    flex items-center justify-center gap-2
+  "
+            >
+              Explore Earnings Assistant
+              <motion.div
+                initial={{ x: 0 }}
+                whileHover={{ x: 8 }} // Moves smoothly when hovered
+                transition={{ type: 'spring', stiffness: 150, damping: 12 }}
+                className="group-hover:translate-x-2"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </motion.div>
+            </Button>
+
+          </div>
+
+          {/* Right Column */}
+          <div className="relative w-full h-full flex justify-center items-center">
+            <Image
+              src="/images/heroim.png"
+              alt="Happy employee"
+              fill
+              className="object-contain"
             />
-          </LineChart>
-        </ResponsiveContainer>
-      </motion.div>
+          </div>
 
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center max-w-3xl relative z-10"
-      >
-        <h1 className="text-5xl font-extrabold text-white leading-tight">
-          Unlock Insights from Earnings Calls
-        </h1>
-        <p className="mt-4 text-lg text-gray-400">
-          Get AI-powered summaries, sentiment analysis, and key takeaways from the latest earnings calls of top companies.
-        </p>
+        </div>
+        <ChatStep isOpen={isOpen} setIsOpen={setIsOpen} onExploreMore={() => setIsLoginOpen(true)}></ChatStep>
 
-      </motion.div>
-      {/* Features Section */}
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl relative z-10">
-        <FeatureCard
-          title="AI-Powered Summaries"
-          description="Quickly understand earnings calls with AI-generated summaries."
-          icon={<Brain size={30} />}
-          gradient="from-blue-600 to-blue-800"
-        />
-        <FeatureCard
-          title="Sentiment Analysis"
-          description="Analyze the tone and sentiment of key executives."
-          icon={<Smile size={30} />}
-          gradient="from-blue-600 to-blue-800"
-        />
-        <FeatureCard
-          title="Actionable Insights"
-          description="Extract key takeaways to make informed investment decisions."
-          icon={<TrendingUp size={30} />}
-          gradient="from-blue-600 to-blue-800"
-        />
+        <CompaniesCarousel></CompaniesCarousel>
       </div>
+      <VideoPlay></VideoPlay>
+      <TabComponent></TabComponent>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-[60vh] mt-12 w-full bg-gradient-to-br from-[#fff3ff] to-[#fdeff9] p-8  shadow-lg items-center">
+        {/* Left Part */}
+        <div className="flex flex-col space-y-4">
+          <p className="text-sm font-medium text-[#DA6486] tracking-wider uppercase">
+            Subscribe
+          </p>
+
+          <h2
+            className="text-4xl font-extrabold leading-tight
+        bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500
+        bg-clip-text text-transparent"
+          >
+            Stay updated with our latest marketing strategies
+          </h2>
+
+          <p className="text-base text-gray-600 leading-relaxed">
+            Drop your email below to receive daily updates about what we do.
+          </p>
+
+          {/* Input and Button Container */}
+          <div className="mt-4 w-full max-w-[500px]">
+            <div className="flex items-center rounded-full overflow-hidden shadow-md border border-gray-300 focus-within:border-gray-300 transition-all">
+              <Input
+                type="email"
+                placeholder="Enter your email address"
+                className="flex-1 px-5 h-[48px] bg-white border-none outline-none text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 rounded-l-full"
+              />
+              <Button className="bg-[#DA6486] h-[48px] px-8 rounded-none rounded-r-full text-white font-medium hover:bg-[#E88FA7] transition-all">
+                Subscribe
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Part */}
+        <div className="relative w-full h-full flex justify-center items-center">
+          <div className="relative w-full h-[280px]">
+            <Image
+              src="/images/heroim.png"
+              alt="Happy employee"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+
     </div>
   );
 }
 
-function FeatureCard({
-  title,
-  description,
-  icon,
-  gradient,
-}: {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  gradient: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className={`bg-gradient-to-r ${gradient} p-6 rounded-2xl shadow-md text-center text-white flex flex-col items-center`}
-    >
-      <div className="mb-2">{icon}</div>
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-gray-200">{description}</p>
-    </motion.div>
-  );
-}
 
-// CSS for glow effect
-const styles = `
-  .glow {
-    filter: drop-shadow(0px 0px 10px #3b82f6);
-  }
-`;
 
-export const GlobalStyles = () => <style>{styles}</style>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

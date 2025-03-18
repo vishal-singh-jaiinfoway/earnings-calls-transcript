@@ -47,20 +47,36 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
-
+.bg-purple-pink-orange {
+  background: rgb(250, 232, 220);
+  background: linear-gradient(
+    90deg,
+    rgba(250, 232, 220, 1) 12%,
+    rgba(239, 194, 255, 1) 37%,
+    rgba(255, 223, 254, 1) 61%,
+    rgba(255, 232, 202, 1) 100%
+  );
+}
 
 .ps-sidebar-container {
-  background: radial-gradient(circle, #93C5FD, #1E40AF); /* Equivalent to from-blue-300 to-blue-800 */
+  background: radial-gradient(
+    circle,
+    #93c5fd,
+    #1e40af
+  ); /* Equivalent to from-blue-300 to-blue-800 */
   color: white;
 }
 .gradient-bg {
-  background: radial-gradient(circle, #93C5FD, #1E40AF); /* Equivalent to from-blue-300 to-blue-800 */
+  background: radial-gradient(
+    circle,
+    #93c5fd,
+    #1e40af
+  ); /* Equivalent to from-blue-300 to-blue-800 */
   color: white;
 }
 .ps-sidebar-container .ps-menu-button {
   transition: background 0.3s ease-in-out;
 }
-
 
 .ps-sidebar-container .ps-menu-button:hover {
   background-color: transparent !important; /* Change this to your desired hover color */
@@ -73,89 +89,23 @@
 
 /* Change background color of submenu items on hover */
 .ps-sidebar-container .ps-submenu .ps-menu-button:hover {
-  background-color: rgba(59, 130, 246, 0.2)!important;  /* Light Blue */
-  transition: background-color 0.3s ease-in-out!important; 
+  background-color: rgba(59, 130, 246, 0.2) !important; /* Light Blue */
+  transition: background-color 0.3s ease-in-out !important;
 }
 
 /* Scale submenu icons on hover */
 .ps-sidebar-container .ps-submenu .ps-menu-button:hover svg {
-  transform: scale(1.2)!important; 
-  transition: transform 0.3s ease-in-out!important; 
+  transform: scale(1.2) !important;
+  transition: transform 0.3s ease-in-out !important;
 }
 /* Change color of submenu title */
 .ps-sidebar-container .ps-submenu > .ps-menu-button {
-  color: #ffffff!important;  /* White text */
+  color: #ffffff !important; /* White text */
 }
 
 /* Change background on hover */
 .ps-sidebar-container .ps-submenu > .ps-menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.1)!important; 
-}
-
-
-
-.custom-markdown.prose h1{
-  color:gray
-}
-.custom-markdown.prose hr{
-  margin-bottom: 2rem;
-  margin-top: 2rem;
-}
-.custom-markdown.prose li::marker {
-  color: gray;
-}
-.custom-markdown.prose td {
-  border:1px solid gray;
-}
-.custom-markdown.prose th {
-  text-align:left;
-  border:1px solid gray;
-}
-.custom-markdown.prose {
-  max-width: 100%;
-  color: #1f2937; /* text-gray-800 */
-  /* font-size: 1rem;
-  line-height: 1.75; */
-}
-
-.custom-markdown.prose h1 {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: bold;
-  color: #111827; /* text-gray-900 */
-  margin-bottom: 1rem;
-}
-
-.custom-markdown.prose h2 {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.custom-markdown.prose p {
-  margin-bottom: 0.5rem;
-}
-
-.custom-markdown.prose a {
-  color: #2563eb; /* blue-600 */
-  text-decoration: underline;
-}
-
-.custom-markdown.prose blockquote {
-  border-left: 4px solid #d1d5db; /* gray-300 */
-  padding-left: 1rem;
-  color: #4b5563; /* gray-600 */
-  font-style: italic;
-}
-
-.custom-markdown.prose ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-}
-
-.custom-markdown.prose ol {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Reduce scrollbar width */
@@ -173,12 +123,8 @@
   border-radius: 10px;
 }
 
-
-
-
 /* bg-gradient-to-r from-blue-300 to-blue-800
 bg-gradient-to-r from-blue-800 to-indigo-900 */
-
 
 :root {
   --background: oklch(1 0 0);

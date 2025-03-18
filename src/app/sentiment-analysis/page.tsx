@@ -1,29 +1,24 @@
 "use client";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { ArrowUpRight, MessageCircle } from "lucide-react";
-import { SetStateAction, useEffect, useRef, useState } from "react";
-import { companies, quarters, years } from "../../../public/data";
+import { useEffect, useRef, useState } from "react";
+import { companies } from "../../../public/data";
 import DOMPurify from "dompurify";
 import FinancialMetrics from "@/components/ui/financial-metrics";
 import MarketMetrics from "@/components/ui/market-metrics";
 import ChatBox from "@/components/ui/chatbox";
-import FilterOptions from "@/components/ui/filter-options";
-import { X } from "lucide-react";
-import CustomHeader from "@/components/ui/header";
+import './styles.css'
+import { Inter } from "next/font/google";
+import { useSelector } from "react-redux";
+const inter = Inter({ subsets: ['latin'], weight: ["400"] });
 
 export default function SentimentAnalysis() {
-    const [chats, setChats] = useState<any>([]);
+    const [chats, setChats] = useState([]);
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/common-chat`;
-    const [selectedCompany, setSelectedCompany] = useState<any>(companies[0]);
+    const [selectedCompany, setSelectedCompany] = useState(companies[0]);
     const [inputValue, setInputValue] = useState("");
-    const [selectedYear, setSelectedYear] = useState<any>(years[0]);
-    const [selectedQuarter, setSelectedQuarter] = useState<any>(quarters[0]);
     const [isLoading, setLoading] = useState(false);
     const [isSentimentsLoading, setIsSentimentsLoading] = useState(false);
     const [content, setContent] = useState("");
@@ -32,45 +27,65 @@ export default function SentimentAnalysis() {
     const [inputText, setInputText] = useState("");
     const [isChatOpen, setIsChatOpen] = useState(false);
 
+    const [isChartsLoading, setIsChatsLoading] = useState(false);
+    const [financialMetricsData, setFinancialMetricsData] = useState<any>({ marketData: {}, revenueTrends: [] });
+
+    // const [earningsMetrics, setEarningsMetrics] = useState([])
+
+    const selectedCompanies = useSelector(
+        (state: any) => state?.sidebar.selectedCompanies,
+    );
+    const selectedYear = useSelector((state: any) => state?.sidebar.selectedYear);
+    const selectedQuarter = useSelector((state: any) => state?.sidebar.selectedQuarter);
+
+
     useEffect(() => {
-        getSentimentAnalysis();
-    }, [selectedCompany, selectedQuarter, selectedYear]);
+        if (selectedCompanies.length > 0 && selectedYear && selectedQuarter) {
+            getFinancialMetricsData();
+            getSentimentAnalysis();
+        }
+    }, [selectedCompanies, selectedYear, selectedQuarter]);
 
-    const getAgentResponse = async () => {
+    useEffect(() => {
+        const fetchEarnings = async () => {
+            const API_KEY = process.env.ALPHA_VANTAGE_ACCESS_KEY;
+            const response = await fetch(`https://www.alphavantage.co/query?function=EARNINGS&symbol=${"MS"}&apikey=${API_KEY}`);
+            const data = await response.json();
+            console.log("alphavantage data", data);
+            //setEarningsMetrics(data);
+        };
+
+        //        fetchEarnings();
+    }, []);
+
+    const getFinancialMetricsData = async () => {
+        if (!selectedCompanies.length || !selectedYear || !selectedQuarter) return;
+
+
         try {
-            setLoading(true);
-            setInputValue("");
-            setChats([...chats, { role: "user", content: inputValue }]);
+            setIsChatsLoading(true);
 
-            const res = await fetch(apiUrl, {
+            const response = await fetch("/api/market-metrics", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    inputValue,
-                    inputText,
-                    selectedCompany,
-                    selectedQuarter,
-                    selectedYear,
-                    chats,
-                }),
+                body: JSON.stringify({ companies: selectedCompanies }),
             });
 
-            const reader = res.body?.getReader();
-            if (!reader) return;
-            const decoder = new TextDecoder();
-            let resultText = "";
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                resultText += decoder.decode(value, { stream: true });
-                console.log("resultText", resultText)
-                setChats([...chats, { role: "assistant", content: DOMPurify.sanitize(resultText) }]);
-            }
-            setLoading(false);
+            if (!response.ok) throw new Error("Failed to fetch data");
+
+            const data = await response.json();
+
+            console.log("FinancialMetricsData", data)
+            setFinancialMetricsData(data);
         } catch (error) {
-            console.log(error);
+            console.error("Error:", error);
+        } finally {
+            setIsChatsLoading(false);
         }
     };
+
+
+
 
     const getSentimentAnalysis = async () => {
         setIsSentimentsLoading(true);
@@ -78,7 +93,7 @@ export default function SentimentAnalysis() {
             const res = await fetch(apiUrlSentiments, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ selectedCompany, selectedYear, selectedQuarter }),
+                body: JSON.stringify({ selectedCompany: { name: "", ticker: selectedCompanies[0] }, selectedYear, selectedQuarter }),
             });
 
             const reader = res.body?.getReader();
@@ -87,93 +102,98 @@ export default function SentimentAnalysis() {
             let resultText = "";
             while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                    break;
+                };
                 resultText += decoder.decode(value, { stream: true });
                 setContent(DOMPurify.sanitize(resultText));
             }
             setIsSentimentsLoading(false);
         } catch (error) {
-            console.log(error);
+            console.error(error);
             setContent("<p style='color:red;'>Error: Sorry, something went wrong.</p>");
         }
     };
 
-    const handleCompanyChange = (value: any) => {
-        const selectedTicker = value;
-        const selectedCompanyObj = companies.find(
-            (company) => company.ticker === selectedTicker,
-        );
-        setSelectedCompany(selectedCompanyObj); // Now setting the full object
-    };
-
-
-
-    const handleYearChange = (value: any) => {
-        setSelectedYear(value);
-    };
-
-    const handleQuarterChange = (value: any) => {
-        setSelectedQuarter(value);
-    };
-
-    const handleInputChangeWithCompany = (event: { target: { value: SetStateAction<string>; }; }) => {
-        console.log("handleInputChangeWithCompany", event.target.value)
-
-        setInputValue(event.target.value);
-        setInputText(
-            `${event.target.value} ${selectedCompany.name ? "for " + selectedCompany.name : ""
-            } ${selectedQuarter ? "for the " + selectedQuarter + " quarter" : ""} ${selectedYear ? "of " + selectedYear : ""
-            }`,
-        );
-    };
-
     return (
-        <div className="flex flex-col bg-gray-50 px-6 py-6 space-y-6">
+        <div className="flex flex-col bg-purple-50 px-6 py-6 space-y-6 min-h-screen">
             {/* Header */}
+            {/* <CustomHeader /> */}
 
-            <CustomHeader></CustomHeader>
-
-
-            {/* Financial Metrics & Market Metrics */}
+            {/* Financial & Market Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                <FinancialMetrics />
-                <MarketMetrics />
+                {isChartsLoading ? (
+                    <div className="flex justify-center items-center h-32 text-gray-400">
+                        Loading charts...
+                    </div>
+                ) : selectedCompanies?.length ? (
+                    <>
+                            <FinancialMetrics />
+                            <MarketMetrics
+                                financialMetricsData={financialMetricsData}
+                                isLoading={isChartsLoading}
+                            />
+                        </>
+                    ) : (
+                        <div className="flex justify-center items-center text-gray-400">
+
+                        </div>
+                )}
             </div>
 
+
             {/* Sentiment Analysis Card */}
-            <Card className="bg-gray-100 shadow-lg rounded-xl border">
-                <CardHeader>
-                    <CardTitle className="text-lg font-semibold">Sentiment Analysis</CardTitle>
-                </CardHeader>
+            <Card className="bg-white shadow-md border border-[#e5e7eb] rounded-xl backdrop-blur-lg">
+                {/* <CardHeader>
+                    <CardTitle className="text-lg font-medium text-purple-600">
+                        Sentiment Analysis
+                    </CardTitle>
+                </CardHeader> */}
                 <CardContent className="py-4">
                     {isSentimentsLoading ? (
                         <div className="flex justify-center items-center py-4">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-purple-600"></div>
                         </div>
-                    ) :
-                        <div className="prose ml-6 custom-markdown text-sm">
-
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeRaw]}
-                            >
-                                {content}
-                            </ReactMarkdown>
-
-                        </div>
-                    }
+                    ) : (
+                        content.trim().length ? formatContent(content) : <p>No Data Available.<br></br>Select a company to get started.</p>
+                    )}
                 </CardContent>
-
             </Card>
-            <ChatBox isOpen={isChatOpen} toggleChat={() => setIsChatOpen(!isChatOpen)} chats={chats} isLoading={isLoading} messagesEndRef={messagesEndRef}></ChatBox>
+
+            {/* Chatbox */}
+            <ChatBox
+                isOpen={isChatOpen}
+                toggleChat={() => setIsChatOpen(!isChatOpen)}
+                chats={chats}
+                setChats={setChats}
+            />
         </div>
     );
+
 }
 
+const formatContent = (text: string) => {
+    // Format headers
+    text = text.replace(/^# (.*?)$/gm, "<h1>$1</h1>");
+    text = text.replace(/^## (.*?)$/gm, "<h2>$1</h2>");
 
+    // Bold for labels
+    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
+    // Line breaks and separation
+    text = text.replace(/---/g, "<hr />");
 
+    // Format lists
+    text = text.replace(/- (.*?)$/gm, "<li>$1</li>");
+    text = text.replace(/(<li>.*<\/li>)+/gm, "<ul>$&</ul>");
 
+    return (
+        <div
+            className={`sentiment-analysis ${inter.className}`}
+            dangerouslySetInnerHTML={{ __html: text }}
+        />
+    );
+};
 
 
 
