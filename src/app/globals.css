@@ -47,20 +47,36 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
-
+.bg-purple-pink-orange {
+  background: rgb(250, 232, 220);
+  background: linear-gradient(
+    90deg,
+    rgba(250, 232, 220, 1) 12%,
+    rgba(239, 194, 255, 1) 37%,
+    rgba(255, 223, 254, 1) 61%,
+    rgba(255, 232, 202, 1) 100%
+  );
+}
 
 .ps-sidebar-container {
-  background: radial-gradient(circle, #93C5FD, #1E40AF); /* Equivalent to from-blue-300 to-blue-800 */
+  background: radial-gradient(
+    circle,
+    #93c5fd,
+    #1e40af
+  ); /* Equivalent to from-blue-300 to-blue-800 */
   color: white;
 }
 .gradient-bg {
-  background: radial-gradient(circle, #93C5FD, #1E40AF); /* Equivalent to from-blue-300 to-blue-800 */
+  background: radial-gradient(
+    circle,
+    #93c5fd,
+    #1e40af
+  ); /* Equivalent to from-blue-300 to-blue-800 */
   color: white;
 }
 .ps-sidebar-container .ps-menu-button {
   transition: background 0.3s ease-in-out;
 }
-
 
 .ps-sidebar-container .ps-menu-button:hover {
   background-color: transparent !important; /* Change this to your desired hover color */
@@ -73,30 +89,42 @@
 
 /* Change background color of submenu items on hover */
 .ps-sidebar-container .ps-submenu .ps-menu-button:hover {
-  background-color: rgba(59, 130, 246, 0.2)!important;  /* Light Blue */
-  transition: background-color 0.3s ease-in-out!important; 
+  background-color: rgba(59, 130, 246, 0.2) !important; /* Light Blue */
+  transition: background-color 0.3s ease-in-out !important;
 }
 
 /* Scale submenu icons on hover */
 .ps-sidebar-container .ps-submenu .ps-menu-button:hover svg {
-  transform: scale(1.2)!important; 
-  transition: transform 0.3s ease-in-out!important; 
+  transform: scale(1.2) !important;
+  transition: transform 0.3s ease-in-out !important;
 }
 /* Change color of submenu title */
 .ps-sidebar-container .ps-submenu > .ps-menu-button {
-  color: #ffffff!important;  /* White text */
+  color: #ffffff !important; /* White text */
 }
 
 /* Change background on hover */
 .ps-sidebar-container .ps-submenu > .ps-menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.1)!important; 
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+/* Reduce scrollbar width */
+::-webkit-scrollbar {
+  width: 4px; /* Adjust scrollbar width */
+  height: 4px; /* For horizontal scrollbar */
+}
 
+::-webkit-scrollbar-track {
+  background: lightgrey; /* Scrollbar track color */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* Scrollbar color */
+  border-radius: 10px;
+}
 
 /* bg-gradient-to-r from-blue-300 to-blue-800
 bg-gradient-to-r from-blue-800 to-indigo-900 */
-
 
 :root {
   --background: oklch(1 0 0);

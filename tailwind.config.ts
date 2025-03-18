@@ -1,28 +1,16 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: [
-        './pages/**/*.{js,ts,jsx,tsx}',
-        './components/**/*.{js,ts,jsx,tsx}',
-        './app/**/*.{js,ts,jsx,tsx}',
-      ],
-    theme: {
-      extend: {
-        colors: {
-          olive: '#808000',
-          oliveLight: '#a9a94a', // Lighter shade of olive
-        },
-        animation: {
-          'slide-in': 'slide-in 0.5s ease-out forwards'
-        },
-        keyframes: {
-          'slide-in': {
-            '0%': { opacity: 0, transform: 'translateX(-40px)' },
-            '100%': { opacity: 1, transform: 'translateX(0)' }
-          }
-        }
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      boxShadow: {
+        dropdown: "0 4px 8px rgba(0, 0, 0, 0.05)", // Soft shadow
+        focus: "0 0 0 2px rgba(59, 130, 246, 0.5)", // Focus ring
       },
     },
-    plugins: [],
-
-  };
-  
+  },
+  plugins: [],
+};

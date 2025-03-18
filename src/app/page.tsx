@@ -1,93 +1,148 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Brain, Smile, TrendingUp } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { useState, useContext } from 'react';
+import Image from 'next/image';
+import { Button } from './components/ui/button';
+import { Input } from './components/ui/input';
+import VideoPlay from './components/home/homepage/VideoPlay';
+import TabComponent from './components/home/homepage/TabComponent';
+import { ParentContext } from './layout';
+import ChatStep from './components/home/homepage/EarningsAssitant';
+import CompaniesCarousel from './components/home/homepage/CompaniesCarousel';
+import Footer from './components/home/homepage/Footer';
 
-// Data for the feature chart
-const featureData = [
-  { name: 'AI Summaries', value: 90, icon: <Brain size={20} /> },
-  { name: 'Sentiment Analysis', value: 80, icon: <Smile size={20} /> },
-  { name: 'Actionable Insights', value: 85, icon: <TrendingUp size={20} /> },
-];
 
 export default function LandingPage() {
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 rounded shadow-2xl">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center max-w-3xl"
-      >
-        <h1 className="text-5xl font-extrabold text-gray-900">Unlock Insights from Earnings Calls</h1>
-        <p className="mt-4 text-lg text-gray-600">
-          Get AI-powered summaries, sentiment analysis, and key takeaways from the latest earnings calls of top companies.
-        </p>
-        <button className="bg-gradient-to-r from-blue-500 to-blue-800 mt-6 px-8 py-3 text-lg font-semibold text-white rounded-lg shadow-lg hover:scale-105 transition-all">
-          Get Started
-        </button>
-      </motion.div>
 
-      {/* Features Section */}
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
-        <FeatureCard
-          title="AI-Powered Summaries"
-          description="Quickly understand earnings calls with AI-generated summaries."
-          icon={<Brain size={30} />}
-        />
-        <FeatureCard
-          title="Sentiment Analysis"
-          description="Analyze the tone and sentiment of key executives."
-          icon={<Smile size={30} />}
-        />
-        <FeatureCard
-          title="Actionable Insights"
-          description="Extract key takeaways to make informed investment decisions."
-          icon={<TrendingUp size={30} />}
-        />
+  const { setIsLoginOpen } = useContext(ParentContext)
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative m-8 flex flex-col items-center justify-center p-0">
+      <div className="grid grid-rows-1 gap-4 min-h-full w-full bg-[#fff3ff] p-[60px] place-items-center">
+        <div className='grid grid-cols-2 gap-4'>
+          {/* Left Column */}
+          <div className="flex flex-col justify-center text-center">
+            <h1 className="text-4xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-purple-600 to-orange-500 text-transparent bg-clip-text">
+
+
+              Smarter Earnings Call Insights,<br />Powered by AI
+            </h1>
+            <p className="mt-4 text-lg font-regular text-gray-600">
+              Decode earnings calls in seconds — no more endless transcripts
+            </p>
+
+            {/* Styled Button */}
+            <Button
+              onClick={() => setIsOpen(true)}
+              className="
+    group mt-6 rounded-full w-[20vw] max-w-[280px] py-6 px-6 text-white font-semibold
+    bg-[#DA6486]
+    shadow-lg shadow-purple-300/40
+    transition-transform transform hover:scale-105 hover:shadow-xl hover:bg-[#E88FA7]
+    flex items-center justify-center gap-2
+  "
+            >
+              Explore Earnings Assistant
+              <motion.div
+                initial={{ x: 0 }}
+                whileHover={{ x: 8 }} // Moves smoothly when hovered
+                transition={{ type: 'spring', stiffness: 150, damping: 12 }}
+                className="group-hover:translate-x-2"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </motion.div>
+            </Button>
+
+          </div>
+
+          {/* Right Column */}
+          <div className="relative w-full h-full flex justify-center items-center">
+            <Image
+              src="/images/heroim.png"
+              alt="Happy employee"
+              fill
+              className="object-contain"
+            />
+          </div>
+
+        </div>
+        <ChatStep isOpen={isOpen} setIsOpen={setIsOpen} onExploreMore={() => setIsLoginOpen(true)}></ChatStep>
+
+        <CompaniesCarousel></CompaniesCarousel>
+      </div>
+      <VideoPlay></VideoPlay>
+      <TabComponent></TabComponent>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-[60vh] mt-12 w-full bg-gradient-to-br from-[#fff3ff] to-[#fdeff9] p-8  shadow-lg items-center">
+        {/* Left Part */}
+        <div className="flex flex-col space-y-4">
+          <p className="text-sm font-medium text-[#DA6486] tracking-wider uppercase">
+            Subscribe
+          </p>
+
+          <h2
+            className="text-4xl font-extrabold leading-tight
+        bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500
+        bg-clip-text text-transparent"
+          >
+            Stay updated with our latest marketing strategies
+          </h2>
+
+          <p className="text-base text-gray-600 leading-relaxed">
+            Drop your email below to receive daily updates about what we do.
+          </p>
+
+          {/* Input and Button Container */}
+          <div className="mt-4 w-full max-w-[500px]">
+            <div className="flex items-center rounded-full overflow-hidden shadow-md border border-gray-300 focus-within:border-gray-300 transition-all">
+              <Input
+                type="email"
+                placeholder="Enter your email address"
+                className="flex-1 px-5 h-[48px] bg-white border-none outline-none text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 rounded-l-full"
+              />
+              <Button className="bg-[#DA6486] h-[48px] px-8 rounded-none rounded-r-full text-white font-medium hover:bg-[#E88FA7] transition-all">
+                Subscribe
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Part */}
+        <div className="relative w-full h-full flex justify-center items-center">
+          <div className="relative w-full h-[280px]">
+            <Image
+              src="/images/heroim.png"
+              alt="Happy employee"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Feature Chart */}
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mt-20 bg-white p-6 rounded-2xl shadow-lg max-w-4xl w-full"
-      >
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">Feature Performance</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={featureData} layout="vertical">
-            <XAxis type="number" hide />
-            <YAxis
-              dataKey="name"
-              type="category"
-              width={150}
-            // tickFormatter={(value, index) => (
-            //   <div className="flex items-center gap-2">
-            //     {featureData[index].icon} {value}
-            //   </div>
-            // )}
-            />
-            <Tooltip />
-            <Bar dataKey="value" fill="#2563eb" radius={[8, 8, 8, 8]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </motion.div> */}
+      <Footer />
+
     </div>
   );
 }
 
-function FeatureCard({ title, description, icon }: any) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="bg-gradient-to-r from-blue-500 to-blue-800 p-6 rounded-2xl shadow-md text-center text-white flex flex-col items-center"
-    >
-      <div className="mb-2">{icon}</div>
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-gray-200">{description}</p>
-    </motion.div>
-  );
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

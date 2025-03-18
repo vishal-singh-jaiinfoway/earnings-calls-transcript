@@ -37,9 +37,9 @@ export async function POST(req) {
     try {
         // Parse the request body
         const body = await req.json();
-        const { checked, selectedCompany, selectedYear, selectedQuarter } = body;
+        const { selectedCompany, selectedYear, selectedQuarter } = body;
 
-        console.log("Request Received:", { checked, selectedCompany, selectedYear, selectedQuarter });
+        console.log("Request Received:", { selectedCompany, selectedYear, selectedQuarter });
 
         // Ensure required fields are present
         if (!selectedCompany || !selectedCompany.ticker || !selectedYear || !selectedQuarter) {

@@ -161,6 +161,20 @@ const personas = [
   "Head of Procurement & Vendor Management"
 ];
 
+const models = [{
+  name: "Claude 3.5 Sonnet v1",
+  value: "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+}, {
+  name: "Claude 3.5 Sonnet v2",
+  value: "anthropic.claude-3-5-sonnet-v2"
+
+}, {
+  name: "Claude 3.5 Haiku",
+  value: "anthropic.claude-3-haiku-20240307-v1:0"
+}]
 
 
-module.exports = { suggestedQuestions, companies, years, quarters, personas };
+
+
+module.exports = { suggestedQuestions, companies, years, quarters, personas, models };
