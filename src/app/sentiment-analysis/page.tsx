@@ -1,13 +1,11 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
+
 import { useEffect, useRef, useState } from "react";
 import { companies } from "../../../public/data";
 import DOMPurify from "dompurify";
-import FinancialMetrics from "@/components/ui/financial-metrics";
-import MarketMetrics from "@/components/ui/market-metrics";
+// import FinancialMetrics from "@/components/ui/financial-metrics";
+// import MarketMetrics from "@/components/ui/market-metrics";
 import ChatBox from "@/components/ui/chatbox";
 import './styles.css'
 import { Inter } from "next/font/google";
@@ -128,11 +126,11 @@ export default function SentimentAnalysis() {
                     </div>
                 ) : selectedCompanies?.length ? (
                     <>
-                            <FinancialMetrics />
+                            {/* <FinancialMetrics />
                             <MarketMetrics
                                 financialMetricsData={financialMetricsData}
                                 isLoading={isChartsLoading}
-                            />
+                            /> */}
                         </>
                     ) : (
                         <div className="flex justify-center items-center text-gray-400">
