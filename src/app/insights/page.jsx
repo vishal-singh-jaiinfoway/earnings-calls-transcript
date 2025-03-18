@@ -610,28 +610,28 @@ const SelectWithSubmenu = ({
   );
 };
 
-const formatContent = (text) => {
-  // Format headers
-  text = text.replace(/^# (.*?)$/gm, "<h1>$1</h1>");
-  text = text.replace(/^## (.*?)$/gm, "<h2>$1</h2>");
+// const formatContent = (text) => {
+//   // Format headers
+//   text = text.replace(/^# (.*?)$/gm, "<h1>$1</h1>");
+//   text = text.replace(/^## (.*?)$/gm, "<h2>$1</h2>");
 
-  // Bold for labels
-  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+//   // Bold for labels
+//   text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-  // Line breaks and separation
-  text = text.replace(/---/g, "<hr />");
+//   // Line breaks and separation
+//   text = text.replace(/---/g, "<hr />");
 
-  // Format lists
-  text = text.replace(/- (.*?)$/gm, "<li>$1</li>");
-  text = text.replace(/(<li>.*<\/li>)+/gm, "<ul>$&</ul>");
+//   // Format lists
+//   text = text.replace(/- (.*?)$/gm, "<li>$1</li>");
+//   text = text.replace(/(<li>.*<\/li>)+/gm, "<ul>$&</ul>");
 
-  return (
-    <div
-      className="sentiment-analysis"
-      dangerouslySetInnerHTML={{ __html: text }}
-    />
-  );
-};
+//   return (
+//     <div
+//       className="sentiment-analysis"
+//       dangerouslySetInnerHTML={{ __html: text }}
+//     />
+//   );
+// };
 
 function BusinessInsightsForm({
   inputValue,
