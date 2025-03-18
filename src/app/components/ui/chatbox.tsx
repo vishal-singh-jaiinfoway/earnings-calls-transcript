@@ -75,26 +75,29 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
 
   // Close chatbox when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        chatBoxRef.current &&
-        !chatBoxRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        toggleChat(); // Close chatbox if click is outside
-      }
-    };
+    if (typeof window != undefined) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          chatBoxRef.current &&
+          !chatBoxRef.current.contains(event.target as Node) &&
+          buttonRef.current &&
+          !buttonRef.current.contains(event.target as Node)
+        ) {
+          toggleChat(); // Close chatbox if click is outside
+        }
+      };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
+      if (isOpen) {
+        document.addEventListener("mousedown", handleClickOutside);
+      } else {
+        document.removeEventListener("mousedown", handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
     }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, [isOpen, toggleChat]);
 
   const getAgentResponse = async () => {

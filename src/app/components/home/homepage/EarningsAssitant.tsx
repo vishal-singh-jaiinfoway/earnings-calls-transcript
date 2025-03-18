@@ -18,6 +18,7 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
   
     // Close chat on outside click
     useEffect(() => {
+      if (typeof window != undefined) {
       function handleClickOutside(event) {
         if (chatRef.current && !chatRef.current.contains(event.target)) {
           setIsOpen(false);
@@ -28,6 +29,7 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
+    }
     }, []);
   
   

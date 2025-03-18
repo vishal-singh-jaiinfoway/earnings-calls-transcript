@@ -484,6 +484,7 @@ const SelectWithSubmenu = ({
   };
 
   useEffect(() => {
+  if (typeof window != undefined) {
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
@@ -497,6 +498,7 @@ const SelectWithSubmenu = ({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }
   }, []);
 
   const openSubmenuWithDelay = (value) => {
