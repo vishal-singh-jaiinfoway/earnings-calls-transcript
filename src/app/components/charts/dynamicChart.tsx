@@ -1,33 +1,23 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-// Dynamically import Chart.js components with SSR disabled
-const Bar = dynamic(() => import("react-chartjs-2").then((mod) => mod.Bar), {
-    ssr: false,
-});
-const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
-    ssr: false,
-});
-const Pie = dynamic(() => import("react-chartjs-2").then((mod) => mod.Pie), {
-    ssr: false,
-});
-const Doughnut = dynamic(
-    () => import("react-chartjs-2").then((mod) => mod.Doughnut),
-    { ssr: false }
-);
-const Scatter = dynamic(
-    () => import("react-chartjs-2").then((mod) => mod.Scatter),
-    { ssr: false }
-);
-const Bubble = dynamic(
-    () => import("react-chartjs-2").then((mod) => mod.Bubble),
-    { ssr: false }
-);
+// Dynamically import chart modules only on the client
+let Bar, Line, Pie, Doughnut, Scatter, Bubble, ChartJS;
 
-import {
-    Chart as ChartJS,
+if (typeof window !== "undefined") {
+    const chartjs = require("chart.js");
+    const chartjs2 = require("react-chartjs-2");
+
+    ChartJS = chartjs.Chart;
+    Bar = chartjs2.Bar;
+    Line = chartjs2.Line;
+    Pie = chartjs2.Pie;
+    Doughnut = chartjs2.Doughnut;
+    Scatter = chartjs2.Scatter;
+    Bubble = chartjs2.Bubble;
+
+    const {
     CategoryScale,
     LinearScale,
     PointElement,
@@ -37,11 +27,10 @@ import {
     Tooltip,
     Legend,
     Filler,
-    ArcElement,
-} from "chart.js";
+        ArcElement
+    } = chartjs;
 
-// Register required chart modules
-ChartJS.register(
+    ChartJS.register(
     CategoryScale,
     LinearScale,
     PointElement,
@@ -52,9 +41,9 @@ ChartJS.register(
     Legend,
     Filler,
     ArcElement
-);
+    );
+}
 
-// Define allowed chart types
 type ChartType =
     | "bar"
     | "stackedBar"
@@ -69,30 +58,31 @@ interface ChartData {
 }
 
 interface Props {
-    key?: number;
+    key: number;
     data: ChartData[];
     chartType: ChartType;
     chartTitle: string;
 }
 
 const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
-    if (!data || data.length === 0) {
-        return <div className="text-center text-gray-500">No data available</div>;
-    }
+    const [isClient, setIsClient] = useState(false); // ✅ Track client-side rendering
 
-    // Safely determine the label key (string value)
+    useEffect(() => {
+        setIsClient(true); // Enable chart rendering on client
+    }, []);
+
+    if (!data || data.length === 0) return <div>No data available</div>;
+
+    // Safely determine the label key
     const labelKey = Object.keys(data[0]).find(
         (key) => typeof data[0][key] === "string"
   );
 
-    if (!labelKey) {
-        return <div className="text-center text-red-500">Invalid data format</div>;
-    }
+    if (!labelKey) return <div>Invalid data format</div>;
 
     const labels = data.map((item) => item[labelKey] as string);
     const keys = Object.keys(data[0]).filter((key) => key !== labelKey);
 
-    // Create chart dataset
     const chartData = {
         labels,
         datasets: keys.map((key, index) => ({
@@ -104,7 +94,7 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
                 "rgba(210, 180, 222, 0.2)", // Lavender
                 "rgba(233, 30, 99, 0.2)", // Hot Pink
                 "rgba(248, 187, 208, 0.2)", // Soft Pink
-                "rgba(112, 123, 124, 0.2)", // Slate Gray
+                "rgba(112, 123, 124, 0.2)" // Slate Gray
             ][index % 6],
             borderColor: [
                 "rgba(91, 44, 111, 1)",
@@ -112,18 +102,17 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
                 "rgba(210, 180, 222, 1)",
                 "rgba(233, 30, 99, 1)",
                 "rgba(248, 187, 208, 1)",
-                "rgba(112, 123, 124, 1)",
+                "rgba(112, 123, 124, 1)"
             ][index % 6],
             borderWidth: 2,
             hoverBackgroundColor: "rgba(0, 0, 0, 0.1)",
             hoverBorderColor: "#000",
             borderRadius: 8,
             fill: true,
-            tension: 0.4,
-    })),
+            tension: 0.4
+        }))
   };
 
-    // Chart configuration
     const chartOptions: any = {
         responsive: true,
         maintainAspectRatio: false,
@@ -134,9 +123,9 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
                     color: "#333",
                     font: {
                         size: 14,
-                        family: "Poppins",
-                    },
-                },
+                        family: "Poppins"
+                    }
+                }
             },
             tooltip: {
                 backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -144,7 +133,7 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
                 titleColor: "#333",
                 borderWidth: 1,
                 borderColor: "#ddd",
-                cornerRadius: 8,
+                cornerRadius: 8
             },
             title: {
                 display: true,
@@ -153,75 +142,80 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
                 font: {
                     size: 18,
                     family: "Poppins",
-                    weight: "bold",
-                },
-                padding: {
-                    top: 10,
-                    bottom: 30,
-                },
+                weight: "bold"
             },
+            padding: {
+                top: 10,
+                    bottom: 30
+                }
+            }
         },
+
         scales: {
             x: {
                 grid: {
                     color: "rgba(0, 0, 0, 0.1)",
-                    borderColor: "#ddd",
-                },
-                ticks: {
-                    color: "#333",
-                    font: {
-                        size: 12,
-                        family: "Poppins",
-                    },
-                },
+                  borderColor: "#ddd"
+              },
+              ticks: {
+                  color: "#333",
+                  font: {
+                      size: 12,
+                      family: "Poppins"
+                  }
+              }
+          },
+          y: {
+              grid: {
+                  color: "rgba(0, 0, 0, 0.1)",
+                borderColor: "#ddd"
             },
-            y: {
-                grid: {
-                    color: "rgba(0, 0, 0, 0.1)",
-                    borderColor: "#ddd",
-                },
-                ticks: {
-                    color: "#333",
-                    font: {
-                        size: 12,
-                        family: "Poppins",
-                    },
-                },
-            },
-        },
+            ticks: {
+                color: "#333",
+                font: {
+                    size: 12,
+                      family: "Poppins"
+                  }
+              }
+          }
+      }
   };
 
-    // Render appropriate chart based on chartType
+    // ✅ Only render chart if it's client-side
+    if (!isClient) {
+        return <div className="text-gray-500">Loading chart...</div>;
+    }
+
     return (
         <div style={{ width: "100%", height: "400px" }}>
-            {chartType === "bar" && <Bar data={chartData} options={chartOptions} />}
-            {chartType === "stackedBar" && (
+            {chartType === "bar" && Bar && <Bar data={chartData} options={chartOptions} />}
+            {chartType === "stackedBar" && Bar && (
                 <Bar
                     data={{
                         ...chartData,
                         datasets: chartData.datasets.map((dataset) => ({
                             ...dataset,
-                            stack: "stack1",
-            })),
+                          stack: "stack1"
+                      }))
                   }}
                   options={{
                       ...chartOptions,
                       scales: {
                           x: { stacked: true },
-                          y: { stacked: true },
-                      },
+                          y: { stacked: true }
+                      }
                   }}
               />
           )}
-          {chartType === "line" && <Line data={chartData} options={chartOptions} />}
-          {chartType === "pie" && <Pie data={chartData} options={chartOptions} />}
-          {chartType === "donut" && (
+            {chartType === "line" && Line && <Line data={chartData} options={chartOptions} />}
+            {chartType === "pie" && Pie && <Pie data={chartData} options={chartOptions} />}
+            {chartType === "donut" && Doughnut && (
               <Doughnut data={chartData} options={chartOptions} />
           )}
-          {chartType === "scatter" && (
+            {chartType === "scatter" && Scatter && (
               <Scatter data={chartData} options={chartOptions} />
           )}
-          {chartType === "bubble" && (
+            {chartType === "bubble" && Bubble && (
               <Bubble data={chartData} options={chartOptions} />
           )}
       </div>

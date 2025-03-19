@@ -26,12 +26,13 @@ export async function POST(req) {
     // Create a buffer from the file
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
 
-    // Define a temporary path in the project's root directory
-    const tempDir = path.join(process.cwd(), "temp");
+    // Check if running on Vercel or locally
+    const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+    const tempDir = isVercel ? "/tmp" : path.join(process.cwd(), "temp");
 
-    // Check if temp directory exists, create if not
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir); // Create temp directory if it doesn't exist
+    // Create temp directory locally if it doesn't exist
+    if (!isVercel && !fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
     }
 
     // Create temp file path
@@ -55,7 +56,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Error processing request:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error?.message || "Internal Server Error" },
       { status: 500 }
     );
   }

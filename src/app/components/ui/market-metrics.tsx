@@ -1,20 +1,29 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  IgrFinancialChart,
-  IgrFinancialChartModule,
-} from "igniteui-react-charts";
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 
-if (typeof window !== 'undefined') {
+// Load charts dynamically after the component is mounted
+let IgrFinancialChart: JSX.IntrinsicAttributes;
+let IgrFinancialChartModule;
+
+if (typeof window !== "undefined") {
+  // Import the chart only in the browser
+  const igniteModule = require("igniteui-react-charts");
+  IgrFinancialChart = igniteModule.IgrFinancialChart;
+  IgrFinancialChartModule = igniteModule.IgrFinancialChartModule;
   IgrFinancialChartModule.register();
 }
+
 function MarketMetrics({ financialMetricsData, isLoading }: any) {
   const [marketData, setMarketData] = useState({});
   const [revenueTrends, setRevenueTrends] = useState([]);
+  const [isClient, setIsClient] = useState(false); // ✅ Track client-side rendering
 
   useEffect(() => {
+    // Only run this code after the component is mounted on the client
+    setIsClient(true);
+
     if (financialMetricsData?.marketData) {
       setMarketData(financialMetricsData?.marketData);
     } else {
@@ -31,7 +40,7 @@ function MarketMetrics({ financialMetricsData, isLoading }: any) {
     <Card className="bg-white text-gray-800 shadow-sm rounded-xl p-4 border border-gray-200">
       {/* Financial Stock Chart */}
       <CardContent className="w-full h-64">
-        {revenueTrends.length > 0 ? (
+        {isClient && revenueTrends.length > 0 && IgrFinancialChart ? (
           <IgrFinancialChart
             width="100%"
             height="100%"
@@ -50,7 +59,7 @@ function MarketMetrics({ financialMetricsData, isLoading }: any) {
           />
         ) : (
           <div className="flex justify-center items-center h-full text-gray-400">
-            No revenue trends data available.
+              {isClient ? "No revenue trends data available." : "Loading chart..."}
           </div>
         )}
       </CardContent>
@@ -76,7 +85,10 @@ function MarketMetrics({ financialMetricsData, isLoading }: any) {
                 : "N/A",
             },
           ].map((data, index) => (
-            <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
+            <div
+              key={index}
+              className="flex justify-between items-center border-b border-gray-200 pb-2"
+            >
               <span className="font-medium text-gray-600">{data.label}:</span>
               <span className="text-gray-700">{data.value}</span>
             </div>

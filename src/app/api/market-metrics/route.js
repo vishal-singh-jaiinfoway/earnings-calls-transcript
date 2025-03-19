@@ -86,7 +86,6 @@ export async function POST(req) {
       earningsData: earningsData.slice(0, 4) || [],
     };
     const marketData = processStockData(responseData);
-console.log("marketData", marketData);
 
     return new Response(JSON.stringify({ marketData, revenueTrends: formattedData }), { status: 200 });
   } catch (error) {
