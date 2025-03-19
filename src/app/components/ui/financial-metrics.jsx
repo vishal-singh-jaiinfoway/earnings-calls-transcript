@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +15,7 @@ import { useSelector } from "react-redux";
 function FinancialMetrics() {
   const [earningsMetrics, setEarningsMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false); // ✅ Track if component is mounted
+  const [isClient, setIsClient] = useState(false);
 
   const earningsData = useSelector((state) => state?.sidebar?.earningsData);
 
@@ -45,11 +46,11 @@ function FinancialMetrics() {
   }, []);
 
   return (
-    <Card className="bg-white text-gray-800 shadow-md rounded-3xl p-8 border border-gray-300 transition-all hover:shadow-lg">
+    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 text-gray-800 shadow-lg rounded-3xl p-8 border border-gray-100 transition-all hover:shadow-xl">
       {/* Header Section */}
       <CardHeader className="pb-6 border-b border-gray-200">
-        <CardTitle className="text-2xl font-bold text-gray-700">
-          Financial Metrics
+        <CardTitle className="text-3xl font-extrabold text-gray-700 tracking-wide">
+          📊 Financial Metrics
         </CardTitle>
       </CardHeader>
 
@@ -58,68 +59,83 @@ function FinancialMetrics() {
         {/* Metrics Section */}
         <div className="space-y-4">
           {isLoading ? (
-            <p className="text-gray-500">Loading data...</p>
+            <p className="text-gray-500 text-lg animate-pulse">
+              Loading data...
+            </p>
           ) : earningsMetrics && earningsMetrics.length > 0 ? (
             earningsMetrics.map((metric, index) => (
-              <div key={index} className="space-y-1">
-                <p>
-                  <span className="font-semibold text-gray-500">Quarter:</span>{" "}
-                  <span className="text-gray-800 font-bold">{metric.name}</span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-500">
-                    EPS Actual:
-                  </span>{" "}
-                  <span className="text-gray-800 font-bold">
+              <div
+                key={index}
+                className="bg-white shadow-md rounded-xl p-4 border border-gray-100 hover:shadow-lg transition-all"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-gray-500 font-medium">Quarter:</div>
+                  <div className="text-gray-800 font-bold">{metric.name}</div>
+
+                  <div className="text-gray-500 font-medium">EPS Actual:</div>
+                  <div className="text-purple-600 font-bold">
                     {metric.value} {metric.currency}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-500">
-                    EPS Estimate:
-                  </span>{" "}
-                  <span className="text-gray-800 font-bold">
+                  </div>
+
+                  <div className="text-gray-500 font-medium">EPS Estimate:</div>
+                  <div className="text-gray-800 font-bold">
                     {metric.estimate} {metric.currency}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-500">
-                    Difference:
-                  </span>{" "}
-                  <span className="text-gray-800 font-bold">
+                  </div>
+
+                  <div className="text-gray-500 font-medium">Difference:</div>
+                  <div
+                    className={`font-bold ${
+                      metric.difference > 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
                     {metric.difference} {metric.currency}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-500">
+                  </div>
+
+                  <div className="text-gray-500 font-medium">
                     Surprise Percent:
-                  </span>{" "}
-                  <span className="text-gray-800 font-bold">
+                  </div>
+                  <div
+                    className={`font-bold ${
+                      parseFloat(metric.surprisePercent) > 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
                     {metric.surprisePercent}
-                  </span>
-                </p>
+                  </div>
+                </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-500">No data available</p>
+            <p className="text-gray-500 text-lg">🚫 No data available.</p>
           )}
         </div>
 
         {/* Chart Section */}
-        <div className="w-full h-60">
+        <div className="w-full h-72 bg-white rounded-xl shadow-md border border-gray-100">
           {isLoading ? (
-            <p className="text-gray-500">Loading chart...</p>
+            <div className="flex justify-center items-center h-full text-gray-400">
+              📊 Loading chart...
+            </div>
           ) : isClient && earningsMetrics && earningsMetrics.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={earningsMetrics} barSize={30}>
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: "#4B5563", fontSize: 14, fontWeight: "500" }}
+                  tick={{
+                    fill: "#4B5563",
+                    fontSize: 14,
+                    fontWeight: "500",
+                  }}
                   axisLine={{ stroke: "#E5E7EB" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#4B5563", fontSize: 14, fontWeight: "500" }}
+                  tick={{
+                    fill: "#4B5563",
+                    fontSize: 14,
+                    fontWeight: "500",
+                  }}
                   axisLine={{ stroke: "#E5E7EB" }}
                   tickLine={false}
                   domain={[0, "auto"]}
@@ -128,27 +144,35 @@ function FinancialMetrics() {
                   contentStyle={{
                     backgroundColor: "#F9FAFB",
                     color: "#4B5563",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     border: "1px solid #E5E7EB",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
                   cursor={{ fill: "#E5E7EB" }}
                 />
                 <Bar
                   dataKey="value"
-                  fill="url(#blueGradient)"
+                  fill="url(#purpleGradient)"
                   radius={[12, 12, 0, 0]}
                 />
                 <defs>
-                  <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366F1" />
-                    <stop offset="100%" stopColor="#4338CA" />
+                  <linearGradient
+                    id="purpleGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#A855F7" />
+                    <stop offset="100%" stopColor="#8B5CF6" />
                   </linearGradient>
                 </defs>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500">No data available for chart</p>
+            <div className="flex justify-center items-center h-full text-gray-400">
+              🚫 No data available for chart.
+            </div>
           )}
         </div>
       </CardContent>
