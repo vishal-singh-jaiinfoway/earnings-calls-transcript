@@ -14,14 +14,18 @@ import { useSelector } from "react-redux";
 function FinancialMetrics() {
   const [earningsMetrics, setEarningsMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false); // ✅ Track if component is mounted
+
   const earningsData = useSelector((state) => state?.sidebar?.earningsData);
 
+  // ✅ Ensure window is available after mount
   useEffect(() => {
+    setIsClient(true);
     setIsLoading(true);
 
-    // Example data
+    // Extract the earnings data for display
     const data = extractEarnings(earningsData?.earningsHistory, 2024, 1);
-    // Extract the data for display
+
     if (data) {
       setEarningsMetrics([
         {
@@ -42,11 +46,14 @@ function FinancialMetrics() {
 
   return (
     <Card className="bg-white text-gray-800 shadow-md rounded-3xl p-8 border border-gray-300 transition-all hover:shadow-lg">
+      {/* Header Section */}
       <CardHeader className="pb-6 border-b border-gray-200">
         <CardTitle className="text-2xl font-bold text-gray-700">
           Financial Metrics
         </CardTitle>
       </CardHeader>
+
+      {/* Content Section */}
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 text-base mt-6">
         {/* Metrics Section */}
         <div className="space-y-4">
@@ -102,7 +109,7 @@ function FinancialMetrics() {
         <div className="w-full h-60">
           {isLoading ? (
             <p className="text-gray-500">Loading chart...</p>
-          ) : (
+          ) : isClient && earningsMetrics && earningsMetrics.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={earningsMetrics} barSize={30}>
                 <XAxis
@@ -140,6 +147,8 @@ function FinancialMetrics() {
                 </defs>
               </BarChart>
             </ResponsiveContainer>
+          ) : (
+            <p className="text-gray-500">No data available for chart</p>
           )}
         </div>
       </CardContent>
@@ -147,6 +156,7 @@ function FinancialMetrics() {
   );
 }
 
+// ✅ Extract earnings data for the selected quarter and year
 const extractEarnings = (earningsHistory, targetYear, targetQuarter) => {
   if (!earningsHistory?.history) return null;
 
@@ -161,4 +171,3 @@ const extractEarnings = (earningsHistory, targetYear, targetQuarter) => {
 };
 
 export default FinancialMetrics;
-

@@ -23,7 +23,6 @@ export async function GET(req) {
         'calendarEvents'
       ],
     });
-console.log("yahooFinance data",JSON.stringify(data));
   
     return new Response(JSON.stringify(data), { status: 200 });
   } catch (error) {
