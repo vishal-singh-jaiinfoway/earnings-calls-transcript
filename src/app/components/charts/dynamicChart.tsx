@@ -82,7 +82,7 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
 
     // Safely determine the label key (string value)
     const labelKey = Object.keys(data[0]).find(
-      (key) => typeof data[0][key] === "string"
+        (key) => typeof data[0][key] === "string"
   );
 
     if (!labelKey) {
@@ -99,27 +99,27 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
             label: key,
             data: data.map((item) => item[key] as number),
             backgroundColor: [
-            "rgba(91, 44, 111, 0.2)", // Deep Purple
-            "rgba(108, 52, 131, 0.2)", // Royal Purple
-            "rgba(210, 180, 222, 0.2)", // Lavender
-            "rgba(233, 30, 99, 0.2)", // Hot Pink
-            "rgba(248, 187, 208, 0.2)", // Soft Pink
-            "rgba(112, 123, 124, 0.2)", // Slate Gray
-        ][index % 6],
-        borderColor: [
-            "rgba(91, 44, 111, 1)",
-            "rgba(108, 52, 131, 1)",
-            "rgba(210, 180, 222, 1)",
-            "rgba(233, 30, 99, 1)",
-            "rgba(248, 187, 208, 1)",
-            "rgba(112, 123, 124, 1)",
-        ][index % 6],
-        borderWidth: 2,
-        hoverBackgroundColor: "rgba(0, 0, 0, 0.1)",
-        hoverBorderColor: "#000",
-        borderRadius: 8,
-        fill: true,
-        tension: 0.4,
+                "rgba(91, 44, 111, 0.2)", // Deep Purple
+                "rgba(108, 52, 131, 0.2)", // Royal Purple
+                "rgba(210, 180, 222, 0.2)", // Lavender
+                "rgba(233, 30, 99, 0.2)", // Hot Pink
+                "rgba(248, 187, 208, 0.2)", // Soft Pink
+                "rgba(112, 123, 124, 0.2)", // Slate Gray
+            ][index % 6],
+            borderColor: [
+                "rgba(91, 44, 111, 1)",
+                "rgba(108, 52, 131, 1)",
+                "rgba(210, 180, 222, 1)",
+                "rgba(233, 30, 99, 1)",
+                "rgba(248, 187, 208, 1)",
+                "rgba(112, 123, 124, 1)",
+            ][index % 6],
+            borderWidth: 2,
+            hoverBackgroundColor: "rgba(0, 0, 0, 0.1)",
+            hoverBorderColor: "#000",
+            borderRadius: 8,
+            fill: true,
+            tension: 0.4,
     })),
   };
 
@@ -131,77 +131,77 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
             legend: {
                 display: true,
                 labels: {
-            color: "#333",
-            font: {
-                size: 14,
-                    family: "Poppins",
+                    color: "#333",
+                    font: {
+                        size: 14,
+                        family: "Poppins",
+                    },
                 },
             },
-        },
-        tooltip: {
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
-          bodyColor: "#333",
-          titleColor: "#333",
-          borderWidth: 1,
-            borderColor: "#ddd",
-            cornerRadius: 8,
-        },
-        title: {
-            display: true,
-          text: chartTitle,
-          color: "#333",
-          font: {
-              size: 18,
-              family: "Poppins",
-              weight: "bold",
-          },
-          padding: {
-              top: 10,
-                bottom: 30,
-            },
-        },
-      },
-      scales: {
-          x: {
-              grid: {
-                color: "rgba(0, 0, 0, 0.1)",
+            tooltip: {
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                bodyColor: "#333",
+                titleColor: "#333",
+                borderWidth: 1,
                 borderColor: "#ddd",
+                cornerRadius: 8,
             },
-            ticks: {
-            color: "#333",
-            font: {
-                size: 12,
+            title: {
+                display: true,
+                text: chartTitle,
+                color: "#333",
+                font: {
+                    size: 18,
                     family: "Poppins",
+                    weight: "bold",
+                },
+                padding: {
+                    top: 10,
+                    bottom: 30,
                 },
             },
         },
-        y: {
-            grid: {
-              color: "rgba(0, 0, 0, 0.1)",
-              borderColor: "#ddd",
-          },
-          ticks: {
-            color: "#333",
-            font: {
-                size: 12,
-                      family: "Poppins",
-                  },
-              },
-          },
-      },
+        scales: {
+            x: {
+                grid: {
+                    color: "rgba(0, 0, 0, 0.1)",
+                    borderColor: "#ddd",
+                },
+                ticks: {
+                    color: "#333",
+                    font: {
+                        size: 12,
+                        family: "Poppins",
+                    },
+                },
+            },
+            y: {
+                grid: {
+                    color: "rgba(0, 0, 0, 0.1)",
+                    borderColor: "#ddd",
+                },
+                ticks: {
+                    color: "#333",
+                    font: {
+                        size: 12,
+                        family: "Poppins",
+                    },
+                },
+            },
+        },
   };
 
     // Render appropriate chart based on chartType
     return (
-      <div style={{ width: "100%", height: "400px" }}>
-          {chartType === "bar" && <Bar data={chartData} options={chartOptions} />}
-          {chartType === "stackedBar" && (
-              <Bar
-                  data={{
-                      ...chartData,
-                      datasets: chartData.datasets.map((dataset) => ({
-                          ...dataset,
-                stack: "stack1",
+        <div style={{ width: "100%", height: "400px" }}>
+            {chartType === "bar" && <Bar data={chartData} options={chartOptions} />}
+            {chartType === "stackedBar" && (
+                <Bar
+                    data={{
+                        ...chartData,
+                        datasets: chartData.datasets.map((dataset) => ({
+                            ...dataset,
+                            stack: "stack1",
             })),
                   }}
                   options={{

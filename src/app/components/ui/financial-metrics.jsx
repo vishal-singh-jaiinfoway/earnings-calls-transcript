@@ -1,55 +1,36 @@
 "use client";
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useSelector } from "react-redux";
 
-// ✅ Dynamically import recharts with SSR disabled
-const BarChart = dynamic(() => import("recharts").then((mod) => mod.BarChart), {
-  ssr: false,
-});
-const Bar = dynamic(() => import("recharts").then((mod) => mod.Bar), {
-  ssr: false,
-});
-const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), {
-  ssr: false,
-});
-const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), {
-  ssr: false,
-});
-const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), {
-  ssr: false,
-});
-const ResponsiveContainer = dynamic(
-  () => import("recharts").then((mod) => mod.ResponsiveContainer),
-  { ssr: false }
-);
-
 function FinancialMetrics() {
-  const [earningsMetrics, setEarningsMetrics] = useState<any[]>([]);
+  const [earningsMetrics, setEarningsMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // ✅ Handle fallback for undefined state
-  const earningsData =
-    useSelector((state: any) => state?.sidebar?.earningsData) || {};
+  const earningsData = useSelector((state) => state?.sidebar?.earningsData);
 
   useEffect(() => {
     setIsLoading(true);
 
-    // ✅ Safely extract earnings data
-    const data = earningsData?.earningsHistory
-      ? extractEarnings(earningsData.earningsHistory, 2024, 1)
-      : null;
-
+    // Example data
+    const data = extractEarnings(earningsData?.earningsHistory, 2024, 1);
+    // Extract the data for display
     if (data) {
       setEarningsMetrics([
         {
           name: `Q${Math.ceil((new Date(data.quarter).getMonth() + 1) / 3)}`,
-          value: data.epsActual || 0,
-          estimate: data.epsEstimate || 0,
-          difference: data.epsDifference || 0,
+          value: data.epsActual,
+          estimate: data.epsEstimate,
+          difference: data.epsDifference,
           surprisePercent: (data.surprisePercent * 100).toFixed(2) + "%",
-          currency: data.currency || "USD",
+          currency: data.currency,
         },
       ]);
     } else {
@@ -57,7 +38,7 @@ function FinancialMetrics() {
     }
 
     setIsLoading(false);
-  }, [earningsData]);
+  }, []);
 
   return (
     <Card className="bg-white text-gray-800 shadow-md rounded-3xl p-8 border border-gray-300 transition-all hover:shadow-lg">
@@ -166,15 +147,12 @@ function FinancialMetrics() {
   );
 }
 
-// ✅ Extract earnings safely with null checks
-const extractEarnings = (earningsHistory: any[], targetYear: number, targetQuarter: number) => {
-  if (!earningsHistory?.length) return null;
+const extractEarnings = (earningsHistory, targetYear, targetQuarter) => {
+  if (!earningsHistory?.history) return null;
 
   return (
-    earningsHistory.find((entry) => {
-      if (!entry?.quarter) return false;
+    earningsHistory.history.find((entry) => {
       const date = new Date(entry.quarter);
-      if (isNaN(date.getTime())) return false;
       const year = date.getFullYear();
       const quarter = Math.ceil((date.getMonth() + 1) / 3);
       return year === targetYear && quarter === targetQuarter;
@@ -183,3 +161,4 @@ const extractEarnings = (earningsHistory: any[], targetYear: number, targetQuart
 };
 
 export default FinancialMetrics;
+

@@ -64,14 +64,14 @@ const VoiceRecorder = ({ onVoiceInput }) => {
 
       <div className="flex items-center justify-center">
         {recording ? (
-          <button
+          <button type="button"
             onClick={stopRecording}
             className="rounded-full bg-red-100 hover:bg-red-200 transition-all shadow-lg"
           >
             <StopCircle className="w-6 h-6 text-red-600" />
           </button>
         ) : (
-          <button
+            <button type="button"
             onClick={startRecording}
             className="rounded-full bg-purple-100 hover:bg-purple-200 transition-all shadow-lg p-2"
           >

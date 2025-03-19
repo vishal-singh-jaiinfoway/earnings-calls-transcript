@@ -1,28 +1,27 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  IgrFinancialChart,
+  IgrFinancialChartModule,
+} from "igniteui-react-charts";
 import { useEffect, useState } from "react";
 
-// ✅ Dynamically import IgrFinancialChart to prevent SSR issues
-const IgrFinancialChart = dynamic(
-  () =>
-    import("igniteui-react-charts").then((mod) => mod.IgrFinancialChart),
-  { ssr: false }
-);
-
+if (typeof window !== 'undefined') {
+  IgrFinancialChartModule.register();
+}
 function MarketMetrics({ financialMetricsData, isLoading }: any) {
-  const [marketData, setMarketData] = useState<any>({});
-  const [revenueTrends, setRevenueTrends] = useState<any[]>([]);
+  const [marketData, setMarketData] = useState({});
+  const [revenueTrends, setRevenueTrends] = useState([]);
 
   useEffect(() => {
     if (financialMetricsData?.marketData) {
-      setMarketData(financialMetricsData.marketData);
+      setMarketData(financialMetricsData?.marketData);
     } else {
       setMarketData({});
     }
     if (financialMetricsData?.revenueTrends) {
-      setRevenueTrends(financialMetricsData.revenueTrends);
+      setRevenueTrends(financialMetricsData?.revenueTrends);
     } else {
       setRevenueTrends([]);
     }
@@ -60,22 +59,24 @@ function MarketMetrics({ financialMetricsData, isLoading }: any) {
       {Object.keys(marketData).length > 0 ? (
         <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 text-sm">
           {[
-            { label: "Market Cap", value: formatValue(marketData?.marketCap) },
-            { label: "Beta", value: formatValue(marketData?.beta) },
-            { label: "P/E Ratio", value: formatValue(marketData?.peRatio, 2) },
-            { label: "Dividend", value: formatValue(marketData?.dividend) },
-            { label: "Dividend Yield", value: formatPercentage(marketData?.dividendYield) },
-            { label: "EPS", value: formatValue(marketData?.eps, 2) },
+            { label: "Market Cap", value: marketData?.marketCap?.toLocaleString() || "N/A" },
+            { label: "Beta", value: marketData?.beta ?? "N/A" },
+            { label: "P/E Ratio", value: marketData?.peRatio?.toFixed(2) || "N/A" },
+            { label: "Dividend", value: marketData?.dividend || "N/A" },
+            { label: "Dividend Yield", value: marketData?.dividendYield ?? "N/A" },
+            { label: "EPS", value: marketData?.eps?.toFixed(2) || "N/A" },
             { label: "Next Earnings Date", value: marketData?.nextEarningsDate || "N/A" },
-            { label: "Highest Price", value: formatValue(marketData?.highestPrice, 2) },
-            { label: "Lowest Price", value: formatValue(marketData?.lowestPrice, 2) },
-            { label: "Average Price", value: formatValue(marketData?.averagePrice, 2) },
-            { label: "Change Percent", value: formatPercentage(marketData?.changePercent) },
+            { label: "Highest Price", value: marketData?.highestPrice?.toFixed(2) || "N/A" },
+            { label: "Lowest Price", value: marketData?.lowestPrice?.toFixed(2) || "N/A" },
+            { label: "Average Price", value: marketData?.averagePrice?.toFixed(2) || "N/A" },
+            {
+              label: "Change Percent",
+              value: marketData?.changePercent
+                ? `${(marketData?.changePercent * 100).toFixed(2)}%`
+                : "N/A",
+            },
           ].map((data, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center border-b border-gray-200 pb-2"
-            >
+            <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
               <span className="font-medium text-gray-600">{data.label}:</span>
               <span className="text-gray-700">{data.value}</span>
             </div>
@@ -89,24 +90,5 @@ function MarketMetrics({ financialMetricsData, isLoading }: any) {
     </Card>
   );
 }
-
-// ✅ Helper to format values with fallback
-const formatValue = (value: any, decimalPlaces = 0) => {
-  if (value === undefined || value === null || isNaN(value)) {
-    return "N/A";
-  }
-  if (typeof value === "number") {
-    return value.toFixed(decimalPlaces);
-  }
-  return value;
-};
-
-// ✅ Helper to format percentage values
-const formatPercentage = (value: any) => {
-  if (value === undefined || value === null || isNaN(value)) {
-    return "N/A";
-  }
-  return `${(value * 100).toFixed(2)}%`;
-};
 
 export default MarketMetrics;
