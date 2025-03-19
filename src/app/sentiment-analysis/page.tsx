@@ -14,18 +14,12 @@ const inter = Inter({ subsets: ['latin'], weight: ["400"] });
 
 export default function SentimentAnalysis() {
     const [chats, setChats] = useState([]);
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/common-chat`;
-    const [selectedCompany, setSelectedCompany] = useState(companies[0]);
-    const [inputValue, setInputValue] = useState("");
-    const [isLoading, setLoading] = useState(false);
     const [isSentimentsLoading, setIsSentimentsLoading] = useState(false);
     const [content, setContent] = useState("");
     const apiUrlSentiments = `${process.env.NEXT_PUBLIC_API_URL}/sentiment-analysis`;
-    const messagesEndRef = useRef(null);
-    const [inputText, setInputText] = useState("");
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-    const [isChartsLoading, setIsChatsLoading] = useState(false);
+    const [isChartsLoading, setIsChartsLoading] = useState(false);
     const [financialMetricsData, setFinancialMetricsData] = useState<any>({ marketData: {}, revenueTrends: [] });
 
     // const [earningsMetrics, setEarningsMetrics] = useState([])
@@ -61,7 +55,7 @@ export default function SentimentAnalysis() {
 
 
         try {
-            setIsChatsLoading(true);
+            setIsChartsLoading(true);
 
             const response = await fetch("/api/market-metrics", {
                 method: "POST",
@@ -78,7 +72,7 @@ export default function SentimentAnalysis() {
         } catch (error) {
             console.error("Error:", error);
         } finally {
-            setIsChatsLoading(false);
+            setIsChartsLoading(false);
         }
     };
 

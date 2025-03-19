@@ -55,6 +55,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
     }
   }, [chats]);
 
+
   // Show greeting when chatbox is opened for the first time
   useEffect(() => {
     if (isOpen && !greetingShown) {
@@ -125,7 +126,9 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
           content: input,
         },
       ]);
-
+      if (messagesEndRef.current) {
+        (messagesEndRef.current as any).scrollIntoView({ behavior: "smooth" });
+      }
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -165,6 +168,9 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
           };
           return temp;
         });
+        if (messagesEndRef.current) {
+          (messagesEndRef.current as any).scrollIntoView({ behavior: "smooth" });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -204,6 +210,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
 
             {/* Messages */}
             <div className="h-[calc(100vh-120px)] overflow-y-auto p-4 space-y-3 bg-gray-50 relative">
+
               {chats.map((msg, i) => (
                 <div
                   key={i}
@@ -222,15 +229,15 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
 
-              {loading && (
+
+            </div>
+            {loading && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                   <div className="animate-spin h-10 w-10 border-t-4 border-purple-500 rounded-full"></div>
                 </div>
-              )}
-            </div>
-
-            <div ref={messagesEndRef} />
+            )}
             {/* Input */}
             <div className="flex items-center gap-2 p-4 bg-purple-50 border-t border-gray-300">
               <Input

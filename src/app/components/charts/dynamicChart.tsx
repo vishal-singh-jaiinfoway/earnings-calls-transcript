@@ -1,28 +1,47 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-    IgrCategoryChartModule,
-    IgrPieChartModule,
-    IgrDataChartCoreModule,
-    IgrDataChartCategoryModule,
-    IgrCategoryChart,
-    IgrPieChart,
-    IgrDataChart,
-    IgrCategoryXAxis,
-    IgrNumericYAxis,
-    IgrScatterSeries,
-} from "igniteui-react-charts";
 
-// ✅ Check for window to avoid SSR error
-const isClient = typeof window !== "undefined";
+// Dynamically import chart modules only on the client
+let Bar, Line, Pie, Doughnut, Scatter, Bubble, ChartJS;
 
-// ✅ Register Ignite UI modules only on client side
-if (isClient) {
-    IgrCategoryChartModule.register();
-    IgrPieChartModule.register();
-    IgrDataChartCoreModule.register();
-    IgrDataChartCategoryModule.register();
+if (typeof window !== "undefined") {
+    const chartjs = require("chart.js");
+    const chartjs2 = require("react-chartjs-2");
+
+    ChartJS = chartjs.Chart;
+    Bar = chartjs2.Bar;
+    Line = chartjs2.Line;
+    Pie = chartjs2.Pie;
+    Doughnut = chartjs2.Doughnut;
+    Scatter = chartjs2.Scatter;
+    Bubble = chartjs2.Bubble;
+
+    const {
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        BarElement,
+        Title,
+        Tooltip,
+        Legend,
+        Filler,
+        ArcElement,
+    } = chartjs;
+
+    ChartJS.register(
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        BarElement,
+        Title,
+        Tooltip,
+        Legend,
+        Filler,
+        ArcElement
+    );
 }
 
 type ChartType =
@@ -32,7 +51,8 @@ type ChartType =
     | "pie"
     | "donut"
     | "scatter"
-    | "bubble";
+    | "bubble"
+    | "stackedColumn";
 
 interface ChartData {
     [key: string]: string | number;
@@ -45,171 +65,158 @@ interface Props {
     chartTitle: string;
 }
 
-// 🎨 Color Palette
+// 🎨 Purple-Pink Themed Color Palette
 const COLORS = [
-    "#7C3AED", // Purple
-    "#8B5CF6", // Soft Purple
-    "#F472B6", // Pink
-    "#EC4899", // Deep Pink
-    "#4B5563", // Dark Gray
-    "#9CA3AF", // Mid Gray
+    "#7C3AED", // Deep Purple
+    "#DB2777", // Vivid Pink
+    "#A78BFA", // Light Purple
+    "#F472B6", // Soft Pink
+    "#9CA3AF", // Cool Gray
+    "#1F2937", // Dark Gray
 ];
 
 const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
-    const [isMounted, setIsMounted] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
-    // ✅ Set isMounted to true after client-side mount
     useEffect(() => {
-      if (isClient) {
-          setIsMounted(true);
-      }
+        setIsClient(true);
   }, []);
 
     if (!data || data.length === 0)
+        return <div className="text-center text-gray-400 mt-4">No data available</div>;
+
+    // ✅ Transform Data Dynamically
+    const chartData = data;
+
+    // 🎯 Updated Chart Options with Theme
+    const chartOptions: any = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    color: "#E5E7EB", // Light Gray
+                    font: {
+                        size: 14,
+                        family: "Poppins",
+                    },
+                },
+            },
+            tooltip: {
+                backgroundColor: "rgba(124, 58, 237, 0.9)", // Purple BG
+                bodyColor: "#F9FAFB", // White Text
+                titleColor: "#F472B6", // Soft Pink
+                borderWidth: 1,
+                borderColor: "#A78BFA", // Light Purple
+                cornerRadius: 10,
+                padding: 12,
+            },
+            title: {
+                display: true,
+                text: chartTitle,
+                color: "#7C3AED",
+                font: {
+                    size: 20,
+                    family: "Poppins",
+                    weight: "bold",
+                },
+                padding: {
+                    top: 10,
+                    bottom: 20,
+                },
+            },
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: "rgba(107, 114, 128, 0.2)", // Light Gray Grid
+                    borderColor: "#A78BFA",
+                },
+                ticks: {
+                    color: "#9CA3AF", // Cool Gray
+                    font: {
+                        size: 12,
+                        family: "Poppins",
+                    },
+                },
+            },
+            y: {
+                grid: {
+                    color: "rgba(107, 114, 128, 0.2)", // Light Gray Grid
+                    borderColor: "#A78BFA",
+                },
+                ticks: {
+                    color: "#9CA3AF",
+                    font: {
+                        size: 12,
+                        family: "Poppins",
+                    },
+                },
+            },
+        },
+    };
+
+    if (!isClient) {
         return (
-            <div className="bg-gray-50 text-center p-6 rounded-xl shadow-md text-gray-500">
-                📉 No data available.
+            <div className="flex justify-center items-center h-40 text-gray-500">
+                Loading chart...
             </div>
         );
-
-    // ✅ Identify label key for x-axis (first string key is treated as label)
-    const labelKey = Object.keys(data[0]).find(
-        (key) => typeof data[0][key] === "string"
-    );
-
-    if (!labelKey)
-        return (
-            <div className="bg-white text-center p-6 rounded-xl shadow-md text-red-500">
-                ⚠️ Invalid data format.
-            </div>
-        );
-
-    const keys = Object.keys(data[0]).filter((key) => key !== labelKey);
-
-    // 🎯 Render appropriate chart only after client-side mount
-    const renderChart = () => {
-        if (!isMounted || !isClient) {
-            return (
-                <div className="flex justify-center items-center h-80 text-gray-500">
-                    ⏳ Loading chart...
-                </div>
-            );
-        }
-
-      switch (chartType) {
-          case "bar":
-          case "stackedBar":
-              return (
-                  <div className="w-full h-80">
-                      <IgrCategoryChart
-                          dataSource={data}
-                          chartType="Column"
-                          isStacked={chartType === "stackedBar"}
-                          xAxisLabel={labelKey}
-                          yAxisTitle="Values"
-                          width="100%"
-                          height="100%"
-                          brushes={COLORS.slice(0, 4)}
-                          outlines={COLORS.slice(0, 4)}
-                      />
-                  </div>
-              );
-
-        case "line":
-            return (
-                <div className="w-full h-80">
-                    <IgrCategoryChart
-                        dataSource={data}
-                        chartType="Line"
-                        xAxisLabel={labelKey}
-                        yAxisTitle="Values"
-                        width="100%"
-                        height="100%"
-                        brushes={COLORS.slice(0, 4)}
-                        outlines={COLORS.slice(0, 4)}
-                    />
-                </div>
-            );
-
-        case "pie":
-        case "donut":
-            const pieData = keys.map((key) => ({
-                category: key,
-                value: data.reduce((sum, item) => sum + (item[key] as number), 0),
-            }));
-
-            return (
-                <div className="w-full h-80 flex justify-center items-center">
-                    <IgrPieChart
-                        dataSource={pieData}
-                        labelMemberPath="category"
-                        valueMemberPath="value"
-                        width="100%"
-                        height="100%"
-                        innerRadius={chartType === "donut" ? 50 : 0}
-                        radiusFactor={0.7}
-                        brushes={COLORS}
-                        outlines={COLORS}
-                    />
-                </div>
-            );
-
-        case "scatter":
-            return (
-                <div className="w-full h-80">
-                    <IgrCategoryChart
-                        dataSource={data}
-                        width="100%"
-                        height="100%"
-                        xAxisLabel={labelKey}
-                        yAxisTitle="Values"
-                        brushes={COLORS.slice(0, 4)}
-                        outlines={COLORS.slice(0, 4)}
-                    />
-                </div>
-            );
-
-        case "bubble":
-            return (
-                <div className="w-full h-80">
-                    <IgrDataChart width="100%" height="100%" dataSource={data}>
-                        <IgrCategoryXAxis name="xAxis" label={labelKey} />
-                        <IgrNumericYAxis name="yAxis" />
-                        {keys.map((key, index) => (
-                            <IgrScatterSeries
-                                key={key}
-                                name={key}
-                                xAxisName="xAxis"
-                                yAxisName="yAxis"
-                                xMemberPath={labelKey}
-                                yMemberPath={key}
-                                markerType="Circle"
-                                brush={COLORS[index % COLORS.length]}
-                            />
-                        ))}
-                    </IgrDataChart>
-                </div>
-            );
-
-        default:
-            return (
-                <div className="bg-gray-50 text-center p-6 rounded-xl shadow-md text-red-500">
-                    ❌ Invalid chart type.
-                </div>
-            );
     }
-  };
 
     return (
-      <div className="bg-gradient-to-b from-purple-50 to-white p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all border border-gray-200">
-          {/* Header Section */}
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 tracking-tight">
-              📊 {chartTitle}
-          </h3>
-
-          {/* Chart Section */}
-          <div className="w-full h-80 rounded-lg overflow-hidden transition-all">
-              {renderChart()}
+        <div className="w-full mx-auto bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
+            <div className="w-full h-[300px] md:h-[400px] relative">
+                {chartType === "bar" && Bar && <Bar data={chartData} options={chartOptions} />}
+                {chartType === "stackedBar" && Bar && (
+                    <Bar
+                        data={{
+                            ...chartData,
+                            datasets: chartData.datasets.map((dataset) => ({
+                                ...dataset,
+                                stack: "stack1",
+                            })),
+                        }}
+                        options={{
+                            ...chartOptions,
+                            scales: {
+                                x: { stacked: true },
+                                y: { stacked: true },
+                            },
+                        }}
+                    />
+                )}
+                {chartType === "line" && Line && <Line data={chartData} options={chartOptions} />}
+                {chartType === "pie" && Pie && <Pie data={chartData} options={chartOptions} />}
+                {chartType === "donut" && Doughnut && (
+                    <Doughnut data={chartData} options={chartOptions} />
+                )}
+                {chartType === "scatter" && Scatter && (
+                    <Scatter data={chartData} options={chartOptions} />
+                )}
+                {chartType === "bubble" && Bubble && (
+                    <Bubble data={chartData} options={chartOptions} />
+                )}
+                {chartType === "stackedColumn" && Bar && (
+                    <Bar
+                        data={{
+                            ...chartData,
+                            datasets: chartData.datasets.map((dataset) => ({
+                                ...dataset,
+                                stack: "stack1",
+                            })),
+                        }}
+                        options={{
+                            ...chartOptions,
+                            indexAxis: "x",
+                            scales: {
+                                x: { stacked: true },
+                                y: { stacked: true },
+                            },
+                        }}
+                    />
+                )}
           </div>
       </div>
   );

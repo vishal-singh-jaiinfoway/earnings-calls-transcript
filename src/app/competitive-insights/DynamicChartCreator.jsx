@@ -41,8 +41,6 @@ const ChartCreator = ({chartData,setChartData}) => {
   const selectedCompanies = useSelector(
     (state) => state.sidebar.selectedCompanies,
   );
-  const selectedYear = useSelector((state) => state.sidebar.selectedYear);
-  const selectedQuarter = useSelector((state) => state.sidebar.selectedQuarter);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -59,7 +57,11 @@ const ChartCreator = ({chartData,setChartData}) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt, companies: selectedCompanies ,chartData}),
+        body: JSON.stringify({
+          prompt,
+          companies: selectedCompanies,
+          chartData,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -68,32 +70,34 @@ const ChartCreator = ({chartData,setChartData}) => {
       setChartData((prev) => {
         let temp = [];
         if (prev.length > 0) {
-            temp = [...prev];
+          temp = [...prev];
         }
-        temp.unshift(data.data); // Add the latest data at the beginning
+        if (Array.isArray(data.data)) {
+          temp.unshift(...data.data); // Spread array items
+        } else {
+          temp.unshift(data.data); // Add single object
+        }
         return temp;
-    });
-    
+      });
+
       setIsLoading(false);
-      scrollToBottom()
+      scrollToBottom();
       return data;
     } catch (error) {
       console.error("Error:", error);
     }
   };
 
-
-
   return (
     <div className="space-y-6">
       {/* Suggestions */}
-      <div className="max-h-[150px] max-w-screen overflow-y-auto border border-gray-300 rounded-lg p-2">
+      <div className="max-h-[150px] w-full overflow-y-auto border border-gray-200 bg-gradient-to-br from-white to-purple-50 rounded-2xl p-3 shadow-sm hover:shadow-lg transition-all duration-300">
         <div className="flex flex-wrap gap-3">
           {SUGGESTIONS.map((suggestion) => (
             <button
               key={suggestion}
               onClick={() => setPrompt(suggestion)}
-              className="px-3 py-2 text-sm bg-white border border-gray-300 rounded-full hover:text-purple-600 transition"
+              className="px-4 py-2 text-sm text-gray-700 bg-gradient-to-r from-gray-100 to-white border border-gray-300 rounded-full shadow-md hover:bg-gradient-to-br hover:from-purple-500 hover:to-pink-400 hover:text-white transition-all duration-300"
             >
               {suggestion}
             </button>
@@ -102,32 +106,68 @@ const ChartCreator = ({chartData,setChartData}) => {
       </div>
 
       {/* Chatbox */}
-      <div className="flex space-x-2">
+      <form
+        className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 w-full bg-gradient-to-r from-white to-purple-50 p-4 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+        onSubmit={handleGenerateChart}
+      >
+        {/* Input Field */}
         <input
           type="text"
           placeholder="Enter chart prompt..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700"
+          className="flex-1 p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-700 placeholder-gray-400 shadow-sm"
         />
+
+        {/* Button */}
         <button
           onClick={handleGenerateChart}
-          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-400 transition"
+          className={`px-6 py-3 text-white rounded-lg transition-all duration-300 ${
+            isLoading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400"
+          }`}
           disabled={isLoading}
         >
-          {isLoading ? "Generating..." : "Generate"}
+          {isLoading ? (
+            <div className="flex items-center space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z"
+                />
+              </svg>
+              <span>Generating...</span>
+            </div>
+          ) : (
+            "Generate"
+          )}
         </button>
-      </div>
+      </form>
+
       <div ref={messagesEndRef} />
 
-  {/* Loading Indicator */}
-  {isLoading && (
+      {/* Loading Indicator */}
+      {isLoading && (
         <div className="flex justify-center my-4">
           <Spinner />
         </div>
       )}
       {/* Chart Preview */}
-      <div className="m-4 max-w-screen">
+      <div className="m-4 max-w-[70vw]">
         {chartData?.length > 0 &&
           chartData?.map((chart, index) => (
             <div key={index} className="mb-6">
@@ -137,9 +177,8 @@ const ChartCreator = ({chartData,setChartData}) => {
                 chartTitle={chart.title}
               />
             </div>
-
           ))}
-          </div>
+      </div>
     </div>
   );
 };

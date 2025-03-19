@@ -1,10 +1,10 @@
-import DynamicChartCreator from './DynamicChartCreator';
+import DynamicChartCreator from "./DynamicChartCreator";
 
-const FinancialPerformance = ({chartData,setChartData}) => {
+const FinancialPerformance = ({ chartData, setChartData }) => {
   return (
     <div className="space-y-8">
       {/* Dynamic Chart Section */}
-      <DynamicChartCreator chartData={chartData} setChartData={setChartData}/>
+      <DynamicChartCreator chartData={chartData} setChartData={setChartData} />
     </div>
   );
 };
