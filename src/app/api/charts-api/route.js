@@ -69,6 +69,7 @@ export async function POST(req) {
                 "title": <chart title>,
                 "index": <index number>,
                 "isUpdate": <true/false>
+                "insights":<insights about chart data>
               }
               \`\`\`
               `,

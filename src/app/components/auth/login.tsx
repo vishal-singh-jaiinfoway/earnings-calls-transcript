@@ -8,6 +8,8 @@ import Image from 'next/image';
 import axios from 'axios';
 import { Snackbar, Alert } from '@mui/material';
 import ReCAPTCHA from "react-google-recaptcha";
+import { useDispatch } from 'react-redux';
+import { setIsUserLoggedIn } from '../../../../store/userSlice';
 
 // Define the types for the props
 interface LoginModalProps {
@@ -18,7 +20,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose, setIsSignupOpen }: LoginModalProps) {
     const { push } = useRouter();
-
+    const dispatch = useDispatch()
     // Define state types
     const [inputs, setInputs] = useState<{
         email: string;
@@ -38,15 +40,30 @@ export default function LoginModal({ isOpen, onClose, setIsSignupOpen }: LoginMo
     const [snackbarMessage, setSnackbarMessage] = useState<string>('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
 
+    // Cleanup on modal close or component unmount
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
+        const abortController = new AbortController();
+        const handleEscape = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+
         if (isOpen) {
             window.addEventListener('keydown', handleEscape);
         }
-        return () => window.removeEventListener('keydown', handleEscape);
-    }, [isOpen, onClose]);
+
+        return () => {
+            window.removeEventListener('keydown', handleEscape);
+            abortController.abort();
+            resetState();
+        };
+    }, [isOpen]);
+
+    const resetState = () => {
+        setInputs({ email: '', enteredOTP: '', captchaToken: '' });
+        setAuthStep(1);
+        setLoading(false);
+        setSnackbarOpen(false);
+        setSnackbarMessage('');
+        setSnackbarSeverity('success');
+    };
 
     const handleSnackbarClose = () => {
         setSnackbarOpen(false);
@@ -119,6 +136,10 @@ export default function LoginModal({ isOpen, onClose, setIsSignupOpen }: LoginMo
                     localStorage.setItem("name", signin.data.data.name);
                     localStorage.setItem("role", signin.data.data.role);
                     localStorage.setItem("email", signin.data.data.email);
+                    setTimeout(() => {
+                        dispatch(setIsUserLoggedIn(true));
+                        onClose()
+                    }, 500);
                 } else {
                     showSnackbar(signin.data.message, 'info');
                 }

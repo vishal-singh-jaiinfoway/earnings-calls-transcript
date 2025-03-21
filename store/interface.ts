@@ -10,6 +10,5 @@ export interface SidebarState {
   selectedYear: number;
   selectedQuarter: string;
   selectedCategory: string;
-  earningsData:any;
-  isUserLoggedIn: boolean;
+  earningsData: any;
 }

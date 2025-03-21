@@ -1,6 +1,8 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
+import { MessageCircle, Maximize2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ChatBox from "../ui/chatbox";
 
 // Dynamically import chart modules only on the client
 let Bar, Line, Pie, Doughnut, Scatter, Bubble, ChartJS;
@@ -63,32 +65,32 @@ interface Props {
     data: ChartData[];
     chartType: ChartType;
     chartTitle: string;
+    chartInsights: string;
 }
 
-// 🎨 Purple-Pink Themed Color Palette
+// 🎨 Color Palette for Theme
 const COLORS = [
-    "#7C3AED", // Deep Purple
-    "#DB2777", // Vivid Pink
-    "#A78BFA", // Light Purple
-    "#F472B6", // Soft Pink
-    "#9CA3AF", // Cool Gray
-    "#1F2937", // Dark Gray
+    "#7C3AED",
+    "#DB2777",
+    "#A78BFA",
+    "#F472B6",
+    "#9CA3AF",
+    "#1F2937",
+    "#E879F9",
+    "#6366F1",
 ];
 
-const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
+const DynamicChart = ({ data, chartType, chartTitle, chartInsights }: Props) => {
     const [isClient, setIsClient] = useState(false);
-
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [chats, setChats] = useState([]);
     useEffect(() => {
         setIsClient(true);
-  }, []);
+    }, []);
 
     if (!data || data.length === 0)
         return <div className="text-center text-gray-400 mt-4">No data available</div>;
 
-    // ✅ Transform Data Dynamically
-    const chartData = data;
-
-    // 🎯 Updated Chart Options with Theme
     const chartOptions: any = {
         responsive: true,
         maintainAspectRatio: false,
@@ -96,130 +98,130 @@ const DynamicChart = ({ data, chartType, chartTitle }: Props) => {
             legend: {
                 display: true,
                 labels: {
-                    color: "#E5E7EB", // Light Gray
+                    color: "#4B5563",
                     font: {
-                        size: 14,
+                        size: 12,
                         family: "Poppins",
                     },
                 },
-            },
-            tooltip: {
-                backgroundColor: "rgba(124, 58, 237, 0.9)", // Purple BG
-                bodyColor: "#F9FAFB", // White Text
-                titleColor: "#F472B6", // Soft Pink
-                borderWidth: 1,
-                borderColor: "#A78BFA", // Light Purple
-                cornerRadius: 10,
-                padding: 12,
             },
             title: {
                 display: true,
                 text: chartTitle,
                 color: "#7C3AED",
                 font: {
-                    size: 20,
+                    size: 18,
                     family: "Poppins",
                     weight: "bold",
                 },
-                padding: {
-                    top: 10,
-                    bottom: 20,
-                },
-            },
-        },
-        scales: {
-            x: {
-                grid: {
-                    color: "rgba(107, 114, 128, 0.2)", // Light Gray Grid
-                    borderColor: "#A78BFA",
-                },
-                ticks: {
-                    color: "#9CA3AF", // Cool Gray
-                    font: {
-                        size: 12,
-                        family: "Poppins",
-                    },
-                },
-            },
-            y: {
-                grid: {
-                    color: "rgba(107, 114, 128, 0.2)", // Light Gray Grid
-                    borderColor: "#A78BFA",
-                },
-                ticks: {
-                    color: "#9CA3AF",
-                    font: {
-                        size: 12,
-                        family: "Poppins",
-                    },
-                },
+                padding: { top: 8, bottom: 12 },
             },
         },
     };
 
+    const handleExpandChart = () => {
+        setIsDrawerOpen(true);
+    };
+
     if (!isClient) {
         return (
-            <div className="flex justify-center items-center h-40 text-gray-500">
+            <div className="flex justify-center items-center h-32 text-gray-500">
                 Loading chart...
             </div>
         );
     }
 
     return (
-        <div className="w-full mx-auto bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
-            <div className="w-full h-[300px] md:h-[400px] relative">
-                {chartType === "bar" && Bar && <Bar data={chartData} options={chartOptions} />}
-                {chartType === "stackedBar" && Bar && (
-                    <Bar
-                        data={{
-                            ...chartData,
-                            datasets: chartData.datasets.map((dataset) => ({
-                                ...dataset,
-                                stack: "stack1",
-                            })),
-                        }}
-                        options={{
-                            ...chartOptions,
-                            scales: {
-                                x: { stacked: true },
-                                y: { stacked: true },
-                            },
-                        }}
-                    />
+        <>
+            {/* Main Chart Card */}
+            <div className="w-full mx-auto bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 relative">
+                {/* Expand Icon */}
+                <button
+                    onClick={handleExpandChart}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-purple-500"
+                >
+                    <Maximize2 className="h-5 w-5" />
+                </button>
+
+                {/* Chart Section */}
+                <div className="w-full h-[250px] md:h-[350px] relative">
+                    {chartType === "bar" && Bar && <Bar data={data} options={chartOptions} />}
+                    {chartType === "line" && Line && <Line data={data} options={chartOptions} />}
+                    {chartType === "pie" && Pie && <Pie data={data} options={chartOptions} />}
+                    {chartType === "donut" && Doughnut && <Doughnut data={data} options={chartOptions} />}
+                    {chartType === "scatter" && Scatter && <Scatter data={data} options={chartOptions} />}
+                    {chartType === "bubble" && Bubble && <Bubble data={data} options={chartOptions} />}
+                </div>
+
+                {/* Chart Insights */}
+                {chartInsights && (
+                    <div className="text-center text-gray-700 mt-4 text-sm italic bg-gray-100 p-2 rounded-lg">
+                        {chartInsights}
+                    </div>
                 )}
-                {chartType === "line" && Line && <Line data={chartData} options={chartOptions} />}
-                {chartType === "pie" && Pie && <Pie data={chartData} options={chartOptions} />}
-                {chartType === "donut" && Doughnut && (
-                    <Doughnut data={chartData} options={chartOptions} />
+            </div>
+
+            <AnimatePresence>
+                {isDrawerOpen && (
+                    <>
+                        {/* Overlay to close drawer */}
+                        <motion.div
+                            className="fixed inset-0 z-[9998]"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsDrawerOpen(false)}
+                        />
+
+                        {/* Drawer Container */}
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: "0%" }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="fixed top-0 right-0 h-full w-[80%]  bg-white shadow-2xl z-[9999] overflow-hidden"
+                        >
+
+
+                            {/* Drawer Content */}
+                            <div className="flex flex-col md:flex-row h-[100%] w-full">
+                                {/* Enlarged Chart Section */}
+                                {/* Drawer Header */}
+
+                                <div className="flex-1 flex-col p-4 bg-gray-50 overflow-y-auto">
+                                    <div className="flex justify-between items-center p-4 border-b">
+                                        <button onClick={() => setIsDrawerOpen(false)}>
+                                            <X className="h-6 w-6 text-gray-500 hover:text-red-500" />
+                                        </button>
+                                    </div>
+                                    <div className="h-[80%] w-full">
+                                        {chartType === "bar" && Bar && <Bar data={data} options={chartOptions} />}
+                                        {chartType === "line" && Line && <Line data={data} options={chartOptions} />}
+                                        {chartType === "pie" && Pie && <Pie data={data} options={chartOptions} />}
+                                        {chartType === "donut" && Doughnut && <Doughnut data={data} options={chartOptions} />}
+                                        {chartType === "scatter" && Scatter && <Scatter data={data} options={chartOptions} />}
+                                        {chartType === "bubble" && Bubble && <Bubble data={data} options={chartOptions} />}
+                                    </div>
+                                </div>
+
+                                {/* ChatBox Section */}
+                                <div className="w-full md:w-[35%] border-l border-gray-200">
+                                    <ChatBox
+                                        isOpen={isDrawerOpen}
+                                        toggleChat={() => setIsDrawerOpen(!isDrawerOpen)}
+                                        chats={chats}
+                                        setChats={setChats}
+                                        showChat1={false}
+                                        showChat2={true}
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
-                {chartType === "scatter" && Scatter && (
-                    <Scatter data={chartData} options={chartOptions} />
-                )}
-                {chartType === "bubble" && Bubble && (
-                    <Bubble data={chartData} options={chartOptions} />
-                )}
-                {chartType === "stackedColumn" && Bar && (
-                    <Bar
-                        data={{
-                            ...chartData,
-                            datasets: chartData.datasets.map((dataset) => ({
-                                ...dataset,
-                                stack: "stack1",
-                            })),
-                        }}
-                        options={{
-                            ...chartOptions,
-                            indexAxis: "x",
-                            scales: {
-                                x: { stacked: true },
-                                y: { stacked: true },
-                            },
-                        }}
-                    />
-                )}
-          </div>
-      </div>
-  );
+            </AnimatePresence>
+        </>
+    );
 };
 
 export default DynamicChart;

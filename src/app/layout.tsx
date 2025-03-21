@@ -12,7 +12,8 @@ import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { createContext } from "react";
 import LoginModal from "./components/auth/login";
 import SignupModal from "./components/auth/register";
-import { setIsUserLoggedIn } from "../../store/sidebarSlice";
+import { setIsUserLoggedIn } from "../../store/userSlice";
+import { Snackbar, Alert } from '@mui/material';
 
 const sora = Sora({ subsets: ['latin'], weight: ["400"] });
 
@@ -25,40 +26,55 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const [isSignupOpen, setIsSignupOpen] = useState<boolean>(false);
 
   const router = useRouter();
+  const isUserLoggedIn = useSelector((state) => state.user.isUserLoggedIn);
+  const dispatch = useDispatch();
 
-  const isUserLoggedIn = useSelector((state) => state.sidebar.isUserLoggedIn);
-  const dispatch = useDispatch()
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
+
+  // Check user login status
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      dispatch(setIsUserLoggedIn(true))
+      dispatch(setIsUserLoggedIn(true));
     }
-  }, [])
+    return () => resetState()
+  }, [dispatch]);
 
-  useEffect(() => {
-    if (pathname === "/insights") {
-      setCollapsed(false);
-    }
-  }, [pathname]);
-
-  const handleToggleSidebar = () => {
-    setCollapsed(!collapsed);
+  const resetState = () => {
+    setSnackbarOpen(false);
+    setSnackbarMessage('');
+    setSnackbarSeverity('success');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    dispatch(setIsUserLoggedIn(false))
-    router.push("/");
-  }
+  // Handle Sidebar logic based on pathname
+  useEffect(() => {
+    setCollapsed(pathname === "/insights");
+  }, [pathname]);
 
+  const handleToggleSidebar = () => setCollapsed(!collapsed);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    dispatch(setIsUserLoggedIn(false));
+    setSnackbarMessage('Logged out successfully');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+    setTimeout(() => {
+      router.push("/");
+    }, 500);
+  };
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
   return (
     <ParentContext.Provider value={{ isLoginOpen, isSignupOpen, setIsLoginOpen, setIsSignupOpen, handleToggleSidebar, pathname, collapsed }}>
-
       <Box sx={{ display: "flex", height: "100vh", overflow: pathname === "/insights" ? "hidden" : "auto" }}>
         {/* Sidebar */}
         {["/insights", "/sentiment-analysis", "/competitive-insights", "/transcript"].includes(pathname) && (
-          <Sidebar />
+          <Sidebar collapsed={collapsed} />
         )}
 
         {/* Main Content */}
@@ -71,31 +87,31 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             component="main"
             sx={{
               flexGrow: 1,
-              overflowY: pathname === "/insights" ? "hidden" : "auto",
+              overflowY: ["/insights"].includes(pathname) ? "hidden" : "auto",
+              padding: "16px",
             }}
-
           >
             {children}
-            {/* Login and Signup Modals */}
-            <LoginModal
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              setIsSignupOpen={setIsSignupOpen}
-            />
-            <SignupModal
-              isOpen={isSignupOpen}
-              onClose={() => setIsSignupOpen(false)}
-              setIsLoginOpen={setIsLoginOpen}
-            />
+            {/* Modals */}
+            {/* Snackbar */}
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={4000}
+              onClose={handleSnackbarClose}
+              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+              <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
+            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} setIsSignupOpen={setIsSignupOpen} />
+            <SignupModal isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} setIsLoginOpen={setIsLoginOpen} />
           </Box>
         </Box>
       </Box>
     </ParentContext.Provider>
-
   );
 }
-
-
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -110,21 +126,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-
-
+// Navbar Component
 const Navbar = ({ handleLogout }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const { setIsLoginOpen, setIsSignupOpen, collapsed, handleToggleSidebar } = useContext(ParentContext);
+  const isUserLoggedIn = useSelector((state) => state.user.isUserLoggedIn);
+
   const [tabIndex, setTabIndex] = useState(0);
-  const { setIsLoginOpen, setIsSignupOpen, collapsed, pathname, handleToggleSidebar } = useContext(ParentContext)
-  const isUserLoggedIn = useSelector((state) => state.sidebar.isUserLoggedIn);
+
+  // Update tabIndex when pathname changes
+  useEffect(() => {
+    const routes = ["/", "/competitive-insights", "/insights", "/sentiment-analysis", "/transcript", "/about"];
+    const currentTabIndex = routes.indexOf(pathname);
+    if (currentTabIndex !== -1) setTabIndex(currentTabIndex);
+  }, [pathname]);
 
   const handleChange = (_event, newValue) => {
     setTabIndex(newValue);
-    const routes = ["/", "/insights", "/sentiment-analysis", "/competitive-insights", "/transcript", "/about"];
+    const routes = ["/", "/competitive-insights", "/insights", "/sentiment-analysis", "/transcript", "/about"];
     router.push(routes[newValue]);
   };
-
-
 
   return (
     <AppBar
@@ -132,31 +154,27 @@ const Navbar = ({ handleLogout }) => {
       sx={{
         backgroundColor: "#ffffff",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.08)",
-        padding: "2px 16px",
-        alignItems: "between",
+        padding: "4px 16px",
+        zIndex: 1201,
       }}
     >
-
       <Toolbar className="flex items-center justify-between">
-
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center gap-2">
           {["/", "/about"].includes(pathname) && <img src="/images/icons/logo.png" alt="Logo" className="h-12" />}
-          {
-            ["/insights", "/sentiment-analysis", "/competitive-insights", "/transcript"].includes(pathname) && <IconButton
+          {["/insights", "/sentiment-analysis", "/competitive-insights", "/transcript"].includes(pathname) && (
+            <IconButton
               color="inherit"
               onClick={handleToggleSidebar}
-              edge="start"
               className="hover:bg-gray-200 transition duration-300 ease-in-out rounded-lg"
             >
-              {
-                collapsed ? <PanelRightOpen className="text-gray-600  transition-colors duration-300" /> : <PanelRightClose className="text-gray-600 transition-colors duration-300" />
-              }
-
+              {collapsed ? (
+                <PanelRightOpen className="text-gray-600 transition-colors duration-300" />
+              ) : (
+                <PanelRightClose className="text-gray-600 transition-colors duration-300" />
+              )}
             </IconButton>
-          }
+          )}
         </div>
-
-
 
         {/* Navigation Tabs */}
         <Tabs
@@ -181,17 +199,17 @@ const Navbar = ({ handleLogout }) => {
           }}
         >
           <Tab label="Home" />
+          <Tab label="Dashboard" />
           <Tab label="Insights" />
           <Tab label="Sentiment" />
-          <Tab label="Competitive" />
           <Tab label="Transcript" />
         </Tabs>
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          {/* Login Button */}
-          {
-            isUserLoggedIn ? <Button onClick={handleLogout}
+          {isUserLoggedIn ? (
+            <Button
+              onClick={handleLogout}
               variant="text"
               sx={{
                 color: "gray",
@@ -201,7 +219,10 @@ const Navbar = ({ handleLogout }) => {
               }}
             >
               Logout
-            </Button> : <Button onClick={() => setIsLoginOpen(true)}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setIsLoginOpen(true)}
               variant="text"
               sx={{
                 color: "gray",
@@ -212,13 +233,11 @@ const Navbar = ({ handleLogout }) => {
             >
               Login
             </Button>
-          }
-
-
-
+          )}
 
           {/* Signup Button */}
-          <Button onClick={() => setIsSignupOpen(true)}
+          <Button
+            onClick={() => setIsSignupOpen(true)}
             variant="contained"
             sx={{
               backgroundColor: "#DA6486",
@@ -244,5 +263,3 @@ const Navbar = ({ handleLogout }) => {
     </AppBar>
   );
 };
-
-

@@ -21,15 +21,29 @@ export default function SignupModal({ isOpen, onClose, setIsLoginOpen }: SignupM
     const [snackbarMessage, setSnackbarMessage] = useState<string>('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
+    // Cleanup on modal close or component unmount
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
+        const abortController = new AbortController();
+        const handleEscape = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+
         if (isOpen) {
             window.addEventListener('keydown', handleEscape);
         }
-        return () => window.removeEventListener('keydown', handleEscape);
-    }, [isOpen, onClose]);
+
+        return () => {
+            window.removeEventListener('keydown', handleEscape);
+            abortController.abort();
+            resetState();
+        };
+    }, [isOpen]);
+
+    const resetState = () => {
+        setEmail('');
+        setError(null);
+        setSnackbarOpen(false);
+        setSnackbarMessage('');
+        setSnackbarSeverity('success');
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -49,7 +63,7 @@ export default function SignupModal({ isOpen, onClose, setIsLoginOpen }: SignupM
 
         try {
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create_user`,
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create_user?referer=earnings-call`,
                 { email }
             );
 
@@ -59,7 +73,10 @@ export default function SignupModal({ isOpen, onClose, setIsLoginOpen }: SignupM
                 setSnackbarSeverity('success');
                 setSnackbarOpen(true);
                 setEmail('');
-                onClose();
+                setTimeout(() => {
+                    onClose();
+                    setIsLoginOpen(true);
+                }, 1000);
             } else {
                 setError(response.data.message || 'Signup failed. Please try again.');
                 setSnackbarMessage(response.data.message || 'Signup failed. Please try again.');

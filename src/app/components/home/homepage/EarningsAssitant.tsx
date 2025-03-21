@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import {  MessageCircle, Mic, SendHorizonalIcon } from 'lucide-react';
+import { MessageCircle, Mic, SendHorizonalIcon, SpeakerIcon, Volume, Volume1, VolumeIcon, VolumeOffIcon, VolumeX } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
@@ -12,10 +12,65 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
     const [isResponseDone, setIsResponseDone] = useState(false);
     const messagesEndRef = useRef(null);
     const intervalRef = useRef(null);
-  
+  const [currentlyPlaying, setCurrentlyPlaying] = useState(null)
     const [isFinalResponseDone, setIsFinalResponseDone] = useState(false);
     const chatRef = useRef(null); // Create a ref for the chat container
-  
+
+  let audioInstance = useRef(null);
+
+  // 🎧 Play/Stop Speech Using Web Speech API
+  const toggleSpeech = (text, index) => {
+    if (currentlyPlaying === index) {
+      stopSpeech(); // Stop if already playing
+      setCurrentlyPlaying(null);
+    } else {
+      stopSpeech(); // Stop any existing speech
+      playSpeech(text, index); // Play new text
+    }
+  };
+
+  // 🎙️ Play Speech with Female Voice
+  const playSpeech = (text, index) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // Get available voices and select a female voice
+      const voices = synth.getVoices();
+      const femaleVoice = voices.find(
+        (voice) => voice.name.includes('Female') || voice.name.includes('Google UK English Female') || voice.name.includes('US English Female')
+      );
+
+      // Use the selected female voice if available, otherwise fallback
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      } else {
+        utterance.voice = voices[0]; // Fallback to default if no female voice found
+      }
+
+      utterance.rate = 1; // Adjust speed (1 is normal speed)
+      utterance.pitch = 1.2; // Slightly higher pitch for natural effect
+
+      // Play and handle completion
+      synth.speak(utterance);
+      setCurrentlyPlaying(index);
+
+      utterance.onend = () => setCurrentlyPlaying(null); // Reset after speech ends
+    } else {
+      console.error('Speech Synthesis API not supported in this browser.');
+    }
+  };
+
+  // ⏹️ Stop Speech
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop any ongoing speech
+      setCurrentlyPlaying(null);
+    }
+  };
+
+
+
     // Close chat on outside click
     useEffect(() => {
       if (typeof window != undefined) {
@@ -50,9 +105,12 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
       setIsGenerating(false);
       setIsResponseDone(false);
       clearInterval(intervalRef.current);
-      setIsFinalResponseDone(false)
+      setIsFinalResponseDone(false);
+      stopSpeech()
     };
-  
+
+
+
     const autoTypePrompt = (text) => {
       let i = 0;
       let generatedPrompt = '';
@@ -63,10 +121,14 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1];
             if (lastMessage?.type === 'user') {
-              return [...prev.slice(0, -1), { type: 'user', text: generatedPrompt }];
+              return [
+                ...prev.slice(0, -1),
+                { type: 'user', text: generatedPrompt, isTyped: i === text.length }
+              ];
             }
-            return [...prev, { type: 'user', text: generatedPrompt }];
+            return [...prev, { type: 'user', text: generatedPrompt, isTyped: i === text.length }];
           });
+
           i++;
           scrollToBottom();
         } else {
@@ -76,7 +138,7 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
       }, 20);
     };
   
-    const typeResponse = (text, startPrompt = false) => {
+  const typeResponse = async (text, startPrompt = false) => {
       let i = 0;
       let generatedResponse = '';
   
@@ -86,17 +148,20 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1];
             if (lastMessage?.type === 'bot') {
-              return [...prev.slice(0, -1), { type: 'bot', text: generatedResponse }];
+              return [
+                ...prev.slice(0, -1),
+                { type: 'bot', text: generatedResponse, isTyped: i === text.length }
+              ];
             }
-            return [...prev, { type: 'bot', text: generatedResponse }];
+            return [...prev, { type: 'bot', text: generatedResponse, isTyped: i === text.length }];
           });
+
           i++;
           scrollToBottom();
         } else {
           clearInterval(intervalRef.current);
           setIsGenerating(false);
           setIsResponseDone(true);
-  
           if (startPrompt) {
             autoTypePrompt(`What are the most common questions asked during the Q&A portion of earnings calls?`);
           } else {
@@ -104,6 +169,7 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
           }
         }
       }, 20);
+
     };
   
     const handleSend = (prompt) => {
@@ -119,7 +185,7 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
   - Inquiries on non-U.S. wealth management business size  
   - Interest in growth prospects and ability to onboard new clients...`
         );
-      }, 1000);
+      }, 300);
     };
   
     const scrollToBottom = () => {
@@ -168,6 +234,19 @@ const ChatStep = ({ isOpen, setIsOpen, onExploreMore }) => {
                       }`}
                   >
                     {msg.text}
+                    {msg.isTyped && (
+                      currentlyPlaying === index ? (
+                        <VolumeOffIcon
+                          onClick={() => stopSpeech()}
+                          className="inline-block ml-2 cursor-pointer text-purple-500 hover:text-purple-700"
+                        />
+                      ) : (
+                        <Volume1
+                          onClick={() => toggleSpeech(msg.text, index)}
+                          className="inline-block ml-2 cursor-pointer text-purple-500 hover:text-purple-700"
+                        />
+                      )
+                    )}
                   </motion.div>
                 ))}
                 {

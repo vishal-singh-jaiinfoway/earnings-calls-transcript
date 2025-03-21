@@ -49,7 +49,6 @@ const VoiceRecorder = ({ onVoiceInput }) => {
       });
       const data = await response.json();
       if (response.ok) {
-        console.log("Audio uploaded successfully:", data);
         onVoiceInput(data.text);
       } else {
         console.error("Transcription failed:", data.error);
@@ -81,7 +80,7 @@ const VoiceRecorder = ({ onVoiceInput }) => {
       </div>
       <p className="text-xs text-gray-500">
         {recording
-          ? "Recording in progress... Click to stop."
+          ? "Click to stop Recording"
           : ""}
       </p>
     </div>

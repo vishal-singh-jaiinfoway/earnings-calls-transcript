@@ -16,8 +16,7 @@ const initialState: SidebarState = {
   selectedYear: years[0],
   selectedQuarter: quarters[0],
   selectedCategory: "Common",
-  earningsData:[],
-  isUserLoggedIn:false
+  earningsData: [],
 };
 
 // Create the slice
@@ -61,9 +60,7 @@ const sidebarSlice = createSlice({
     setEarningsData(state, action: PayloadAction<any>) {
       state.earningsData = action.payload;
     },
-    setIsUserLoggedIn(state,action:PayloadAction<boolean>){
-      state.isUserLoggedIn = action.payload;
-    }
+
     // Add other reducer actions for settings here if needed
   },
 });
@@ -82,7 +79,6 @@ export const {
   setQuarter,
   setCategory,
   setEarningsData,
-  setIsUserLoggedIn
 } = sidebarSlice.actions;
 
 // Export reducer

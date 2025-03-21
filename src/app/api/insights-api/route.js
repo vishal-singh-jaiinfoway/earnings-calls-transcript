@@ -71,46 +71,6 @@ const extractJSON = (text) => {
     return match ? match[1] : "No valid JSON found";
 };
 
-// Function to get query parameters from Claude model
-// const getQueryParams = async (prompt) => {
-//     try {
-//         const modelCommand = new InvokeModelCommand({
-//             modelId: "anthropic.claude-3-5-sonnet-20240620-v1:0",
-//             contentType: "application/json",
-//             accept: "application/json",
-//             body: JSON.stringify({
-//                 anthropic_version: "bedrock-2023-05-31",
-//                 messages: [
-//                     {
-//                         role: "user",
-//                         content: `From the following prompt, infer the required company ticker(s), quarter(s), and year(s) for which transcripts are needed.If you infer that you need for all the quarters,then insert four values.Transcripts are only available for the year 2024.
-
-//         Return your response in JSON format:
-//         \`\`\`json
-//         [
-//             { "ticker": "<company_ticker>", "quarter": "<quarter>", "year": "<year>" }
-//         ]
-//         \`\`\`
-
-//         ### Prompt:
-//         ${prompt}`
-//                     }
-//                 ],
-//                 max_tokens: 500
-//             })
-//         });
-
-//         const response = await bedrockClient.send(modelCommand);
-//         const responseData = JSON.parse(Buffer.from(response.body).toString("utf-8"));
-//         const responseText = responseData?.content?.map(item => item.text).join("\n") || "No response received";
-
-//         const extractedJSON = extractJSON(responseText);
-//         return JSON.parse(extractedJSON);
-//     } catch (error) {
-//         console.error("Unexpected error:", error);
-//         throw error;
-//     }
-// };
 
 const getAnswerForPrompt = async function* (source, prompt, chats, context, persona, foundationModel,
     fmTemperature,

@@ -31,7 +31,6 @@ const MarketTrends = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#00ffff10] to-[#ff00ff10] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative z-10 flex items-start gap-3">
-              {/* <span className="text-2xl transition-transform group-hover:scale-110">{trend.icon}</span> */}
               <div>
                 <strong className="text-lg font-semibold text-gray-800 leading-relaxed tracking-wide">
                   {trend.title}

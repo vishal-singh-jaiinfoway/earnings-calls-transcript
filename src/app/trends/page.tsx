@@ -104,7 +104,7 @@ const data = {
   }
 };
 
-export default function ChartPage() {
+export default function Trends() {
   // ✅ Cash Flow Chart Data
   const cashFlowData = {
     labels: data.cashflowStatementHistory.cashflowStatements.map(item =>

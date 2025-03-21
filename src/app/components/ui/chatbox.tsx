@@ -23,9 +23,11 @@ interface ChatBoxProps {
   toggleChat: () => void;
   chats: any;
   setChats: any;
+  showChat1?: boolean;
+  showChat2?: boolean;
 }
 
-function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
+function ChatBox({ isOpen, toggleChat, chats, setChats, showChat1 = true, showChat2 = false }: ChatBoxProps) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -58,7 +60,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
 
   // Show greeting when chatbox is opened for the first time
   useEffect(() => {
-    if (isOpen && !greetingShown) {
+    if (isOpen && !greetingShown && !chats.length) {
       setChats((prev) => [
         ...prev,
         {
@@ -67,7 +69,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
         },
       ]);
       setGreetingShown(true);
-    }
+    } 
   }, [isOpen, greetingShown]);
 
   const handleOpenChat = () => {
@@ -179,6 +181,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
 
   return (
     <>
+      {showChat1 ? <>
       {!isOpen && (
         <button
           ref={buttonRef}
@@ -197,8 +200,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed top-0 right-0 w-[350px] sm:w-[400px] md:w-[450px] h-full bg-white shadow-lg z-[10000] border-l border-gray-300 flex flex-col"
-          >
-            {/* Header */}
+            >
             <div
               className="flex justify-between items-center p-4 bg-purple-600 text-white"
             >
@@ -208,7 +210,6 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
               </button>
             </div>
 
-            {/* Messages */}
             <div className="h-[calc(100vh-120px)] overflow-y-auto p-4 space-y-3 bg-gray-50 relative">
 
               {chats.map((msg, i) => (
@@ -237,8 +238,7 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                   <div className="animate-spin h-10 w-10 border-t-4 border-purple-500 rounded-full"></div>
                 </div>
-            )}
-            {/* Input */}
+              )}
             <div className="flex items-center gap-2 p-4 bg-purple-50 border-t border-gray-300">
               <Input
                 className="flex-1 border border-gray-300 bg-white text-gray-700 placeholder-gray-400 rounded-lg px-4 py-2 shadow-sm focus:outline-none"
@@ -257,6 +257,64 @@ function ChatBox({ isOpen, toggleChat, chats, setChats }: ChatBoxProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      </> : <div className="h-full bg-white shadow-lg border-l border-gray-300 flex flex-col"
+      >
+        {/* Header */}
+        <div
+          className="flex justify-between items-center p-4 bg-purple-600 text-white"
+        >
+          <span className="text-lg font-semibold">AI Assistant</span>
+
+        </div>
+
+        {/* Messages */}
+        <div className="h-[calc(100vh-120px)] overflow-y-auto p-4 space-y-3 bg-gray-50 relative">
+
+          {chats.map((msg, i) => (
+            <div
+              key={i}
+              className={`p-3 rounded-xl text-sm max-w-[75%] shadow ${msg.role === "user"
+                ? "bg-purple-100 text-purple-800 ml-auto"
+                : "bg-gray-100 text-gray-800"
+                }`}
+            >
+              <div className="prose ml-4 leading-relaxed font-medium">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+              {loading && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-10 w-10 border-t-4 border-purple-500 rounded-full"></div>
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+
+
+        </div>
+
+        {/* Input */}
+        <div className="flex items-center gap-2 p-4 bg-purple-50 border-t border-gray-300">
+          <Input
+            className="flex-1 border border-gray-300 bg-white text-gray-700 placeholder-gray-400 rounded-lg px-4 py-2 shadow-sm focus:outline-none"
+            placeholder="Ask a question..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && getAgentResponse()}
+          />
+          <VoiceRecorder onVoiceInput={(text: string) => setInput(text)} />
+          <SendHorizonalIcon
+            onClick={getAgentResponse}
+            className="text-purple-800 cursor-pointer"
+            role="button"
+          />
+        </div>
+      </div>}
     </>
   );
 }

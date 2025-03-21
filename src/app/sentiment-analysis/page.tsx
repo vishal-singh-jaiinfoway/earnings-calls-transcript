@@ -67,7 +67,6 @@ export default function SentimentAnalysis() {
 
             const data = await response.json();
 
-            console.log("FinancialMetricsData", data)
             setFinancialMetricsData(data);
         } catch (error) {
             console.error("Error:", error);

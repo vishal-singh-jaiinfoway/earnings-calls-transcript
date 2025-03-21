@@ -7,20 +7,14 @@ import MarketTrends from './MarketTrends';
 import CompetitiveInsights from './CompetitiveInsights';
 import Commentary from './Commentary';
 import Guidance from './Guidance';
-import ChatBox from "@/components/ui/chatbox";
+
+
+
 
 const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
 
-  const [chats, setChats] = useState([]);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
   const TABS = [
-    {
-      id: "executive-summary",
-      label: "Executive Summary",
-      component: <ExecutiveSummary />,
-    },
     {
       id: "financial-performance",
       label: "Financial Performance",
@@ -30,6 +24,11 @@ const Dashboard = () => {
           setChartData={setChartData}
         />
       ),
+    },
+    {
+      id: "executive-summary",
+      label: "Executive Summary",
+      component: <ExecutiveSummary />,
     },
     {
       id: "market-trends",
@@ -55,7 +54,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
 
   return (
-    <div className="min-h-screen bg-purple-50 text-gray-800 p-6">
+    <div className="w-full min-h-screen bg-purple-50 text-gray-800 p-6">
       {/* Tabs */}
       <div className="flex space-x-4 border-b border-gray-300 mb-6">
         {TABS.map((tab) => (
@@ -80,13 +79,6 @@ const Dashboard = () => {
             activeTab === tab.id && <div key={tab.id}>{tab.component}</div>,
         )}
       </div>
-      {/* Chatbox */}
-      <ChatBox
-        isOpen={isChatOpen}
-        toggleChat={() => setIsChatOpen(!isChatOpen)}
-        chats={chats}
-        setChats={setChats}
-      />
     </div>
   );
 };
